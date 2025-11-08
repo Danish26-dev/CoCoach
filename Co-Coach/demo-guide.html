@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Guide - Live Golf Posture Feedback</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0A0B0F;
+            color: #F5F5F5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            border-radius: 24px;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0A0B0F;
+            margin-bottom: 16px;
+        }
+
+        .header p {
+            font-size: 20px;
+            color: rgba(10, 11, 15, 0.8);
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .link-card {
+            background: #1A1B20;
+            border: 2px solid rgba(0,178,255,0.2);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .link-card:hover {
+            border-color: #00B2FF;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,178,255,0.3);
+        }
+
+        .link-card .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .link-card .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #F5F5F5;
+            margin-bottom: 8px;
+        }
+
+        .link-card .desc {
+            font-size: 14px;
+            color: #9CA3AF;
+        }
+
+        .section {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 32px;
+            color: #00B2FF;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section h3 {
+            font-size: 24px;
+            color: #1EF9A1;
+            margin: 32px 0 16px 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .feature-box {
+            background: rgba(0,178,255,0.05);
+            border: 1px solid rgba(0,178,255,0.2);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .feature-box h4 {
+            font-size: 18px;
+            color: #F5F5F5;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-box p {
+            color: #9CA3AF;
+            font-size: 15px;
+        }
+
+        .steps {
+            counter-reset: step-counter;
+        }
+
+        .step {
+            background: rgba(0,178,255,0.05);
+            border-left: 4px solid #00B2FF;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 80px;
+        }
+
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: #0A0B0F;
+        }
+
+        .step h4 {
+            font-size: 18px;
+            color: #F5F5F5;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: #9CA3AF;
+            font-size: 15px;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .metrics-table th,
+        .metrics-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,178,255,0.1);
+        }
+
+        .metrics-table th {
+            background: rgba(0,178,255,0.1);
+            color: #00B2FF;
+            font-weight: 600;
+        }
+
+        .metrics-table td {
+            color: #9CA3AF;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            color: #0A0B0F;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,178,255,0.5);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .badge-success {
+            background: rgba(30,249,161,0.15);
+            color: #1EF9A1;
+            border: 1px solid rgba(30,249,161,0.3);
+        }
+
+        .badge-warning {
+            background: rgba(255,178,0,0.15);
+            color: #FFB200;
+            border: 1px solid rgba(255,178,0,0.3);
+        }
+
+        .badge-info {
+            background: rgba(0,178,255,0.15);
+            color: #00B2FF;
+            border: 1px solid rgba(0,178,255,0.3);
+        }
+
+        .drill-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .drill-item {
+            background: rgba(0,178,255,0.05);
+            border: 1px solid rgba(0,178,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .drill-item .drill-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .drill-item .drill-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F5F5F5;
+            margin-bottom: 8px;
+        }
+
+        .drill-item .drill-desc {
+            font-size: 13px;
+            color: #9CA3AF;
+        }
+
+        code {
+            background: rgba(0,178,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #1EF9A1;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .highlight-box {
+            background: rgba(30,249,161,0.05);
+            border: 2px solid rgba(30,249,161,0.3);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .highlight-box h4 {
+            color: #1EF9A1;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .section {
+                padding: 24px;
+            }
+
+            .step {
+                padding-left: 24px;
+                padding-top: 60px;
+            }
+
+            .step::before {
+                left: 50%;
+                top: 20px;
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏌️ Live Golf Posture Feedback</h1>
+            <p>AI-Powered Real-Time Coaching System - Demo Guide</p>
+        </div>
+
+        <div class="quick-links">
+            <a href="live-posture-feedback.html" class="link-card">
+                <div class="icon">🚀</div>
+                <div class="title">Launch App</div>
+                <div class="desc">Start your first session</div>
+            </a>
+            <a href="test-posture.html" class="link-card">
+                <div class="icon">🧪</div>
+                <div class="title">Run Tests</div>
+                <div class="desc">Verify system setup</div>
+            </a>
+            <a href="QUICK_START.md" class="link-card" target="_blank">
+                <div class="icon">📖</div>
+                <div class="title">Quick Start</div>
+                <div class="desc">User guide & tips</div>
+            </a>
+            <a href="LIVE_POSTURE_FEEDBACK_README.md" class="link-card" target="_blank">
+                <div class="icon">📚</div>
+                <div class="title">Full Docs</div>
+                <div class="desc">Technical documentation</div>
+            </a>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What This System Does</h2>
+            <p style="color: #9CA3AF; margin-bottom: 24px;">
+                A comprehensive real-time golf posture analysis system that provides instant AI coaching 
+                through voice and visual feedback. No scoring, just pure improvement-focused guidance.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h4>🎥 Real-Time Detection</h4>
+                    <p>Uses MediaPipe Pose to track 33 body landmarks at 15-30 FPS</p>
+                </div>
+                <div class="feature-box">
+                    <h4>📊 5 Key Metrics</h4>
+                    <p>Analyzes spine tilt, knee bend, shoulder level, hip rotation, head position</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🗣️ Voice Coaching</h4>
+                    <p>Natural speech synthesis with encouraging, specific feedback</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🎮 5 Interactive Drills</h4>
+                    <p>Targeted exercises for alignment, rotation, coordination, and balance</p>
+                </div>
+                <div class="feature-box">
+                    <h4>✨ Beautiful UI</h4>
+                    <p>Dark theme with glowing gradients, smooth animations, responsive design</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🚀 Zero Setup</h4>
+                    <p>No installation, no build process, works instantly in browser</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📖 How to Use</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <h4>Launch the Application</h4>
+                    <p>Open <code>live-posture-feedback.html</code> in Chrome or run <code>start-posture-feedback.bat</code></p>
+                </div>
+                <div class="step">
+                    <h4>Grant Camera Permissions</h4>
+                    <p>Click "Allow" when prompted. Camera is required for pose detection.</p>
+                </div>
+                <div class="step">
+                    <h4>Position Yourself</h4>
+                    <p>Stand 6-8 feet from camera. Ensure full body is visible in frame.</p>
+                </div>
+                <div class="step">
+                    <h4>Click "Start Session"</h4>
+                    <p>AI coach will activate and begin analyzing your posture in real-time.</p>
+                </div>
+                <div class="step">
+                    <h4>Follow the Feedback</h4>
+                    <p>Listen to voice coaching and watch the text overlay for specific corrections.</p>
+                </div>
+                <div class="step">
+                    <h4>Try the Drills</h4>
+                    <p>Click any drill card to activate focused training on specific posture aspects.</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>💡 Pro Tip</h4>
+                <p>Start with the <strong>Wall-Back Alignment</strong> drill to build a solid foundation. 
+                Once you master that, move to <strong>Hip Twist</strong> and <strong>Air Swing</strong> for dynamic movements.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Posture Metrics Explained</h2>
+            
+            <table class="metrics-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Ideal Range</th>
+                        <th>What It Measures</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Spine Tilt</strong></td>
+                        <td>35-45°</td>
+                        <td>Forward lean from hips - proper golf stance angle</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Knee Bend</strong></td>
+                        <td>15-25°</td>
+                        <td>Knee flexion - athletic ready position</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shoulder Level</strong></td>
+                        <td>±5°</td>
+                        <td>Shoulder height difference - should be parallel</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hip Rotation</strong></td>
+                        <td>20-45°</td>
+                        <td>Hip turn angle - power generation range</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Head Tilt</strong></td>
+                        <td><10°</td>
+                        <td>Head position relative to spine - eye level</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🎯 The Five Drills</h2>
+            
+            <div class="drill-showcase">
+                <div class="drill-item">
+                    <div class="drill-icon">🧱</div>
+                    <div class="drill-title">Wall-Back Alignment</div>
+                    <div class="drill-desc">Perfect your spine straightness and head position</div>
+                    <div style="margin-top: 12px;">
+                        <span class="badge badge-info">Foundation</span>
+                    </div>
+                </div>
+                
+                <div class="drill-item">
+                    <div class="drill-icon">🔄</div>
+                    <div class="drill-title">Hip Twist Drill</div>
+                    <div class="drill-desc">Master optimal hip rotation range for power</div>
+                    <div style="margin-top: 12px;">
+                        <span class="badge badge-warning">Power</span>
+                    </div>
+                </div>
+                
+                <div class="drill-item">
+                    <div class="drill-icon">🏌️</div>
+                    <div class="drill-title">Air Swing Simulation</div>
+                    <div class="drill-desc">Coordinate shoulder and hip movement timing</div>
+                    <div style="margin-top: 12px;">
+                        <span class="badge badge-success">Coordination</span>
+                    </div>
+                </div>
+                
+                <div class="drill-item">
+                    <div class="drill-icon">⚖️</div>
+                    <div class="drill-title">Shoulder Tilt Control</div>
+                    <div class="drill-desc">Maintain level shoulders throughout swing</div>
+                    <div style="margin-top: 12px;">
+                        <span class="badge badge-info">Precision</span>
+                    </div>
+                </div>
+                
+                <div class="drill-item">
+                    <div class="drill-icon">🦩</div>
+                    <div class="drill-title">One-Leg Balance</div>
+                    <div class="drill-desc">Build stability and core strength</div>
+                    <div style="margin-top: 12px;">
+                        <span class="badge badge-warning">Stability</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>How Drills Work</h3>
+            <p style="color: #9CA3AF; margin-bottom: 16px;">
+                Each drill analyzes specific posture conditions and provides targeted feedback:
+            </p>
+            <ul style="color: #9CA3AF; margin-left: 24px;">
+                <li style="margin-bottom: 8px;">Click a drill card to activate it (green glow appears)</li>
+                <li style="margin-bottom: 8px;">Perform the drill movement or hold the position</li>
+                <li style="margin-bottom: 8px;">Receive real-time feedback on your form</li>
+                <li style="margin-bottom: 8px;">Voice guides you with specific corrections</li>
+                <li style="margin-bottom: 8px;">Green checkmark = perfect, adjust until you see it!</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>💬 Understanding Feedback</h2>
+            
+            <h3>Visual Indicators</h3>
+            <div style="margin: 20px 0;">
+                <span class="badge badge-success">✓ Green = Perfect</span>
+                <span class="badge badge-warning">⚠ Orange = Adjust</span>
+                <span class="badge badge-info" style="background: rgba(255,59,59,0.15); color: #FF3B3B; border-color: rgba(255,59,59,0.3);">✗ Red = Correction Needed</span>
+            </div>
+
+            <h3>Voice Feedback Examples</h3>
+            <div class="feature-box" style="margin-top: 16px;">
+                <h4>✅ Positive Reinforcement</h4>
+                <p style="margin-top: 8px;">"Excellent posture — perfect golf stance!"</p>
+                <p>"Beautiful coordination! Shoulders and hips moving perfectly together."</p>
+                <p>"Rock solid balance! You're holding steady."</p>
+            </div>
+
+            <div class="feature-box" style="margin-top: 16px;">
+                <h4>⚠️ Corrective Feedback</h4>
+                <p style="margin-top: 8px;">"Your spine is too upright — lean slightly forward"</p>
+                <p>"Bend your knees more — you're too stiff"</p>
+                <p>"Level your shoulders — one is higher than the other"</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎨 UI Features</h2>
+            
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h4>📹 Live Video Feed</h4>
+                    <p>Real-time camera view with pose landmarks overlaid. Green glowing points show detected body parts.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>📊 Metrics Panel</h4>
+                    <p>Live updating cards showing all 5 metrics. Color-coded status indicators for instant feedback.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>💬 Feedback Overlay</h4>
+                    <p>Text feedback appears on video. Changes color based on status: green (good), orange (adjust), red (fix).</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🎯 Drill Cards</h4>
+                    <p>Click to activate. Active drill shows green glow. Hover for interaction preview.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>📈 Session Summary</h4>
+                    <p>Appears after stopping. Answer question to get personalized drill recommendations.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🎨 Dark Theme</h4>
+                    <p>Eye-friendly dark background with blue-green gradients. Consistent with CoCoach platform.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Troubleshooting</h2>
+            
+            <h3>Camera Not Working?</h3>
+            <p style="color: #9CA3AF; margin: 12px 0;">
+                Check browser permissions (click lock icon in address bar) → Ensure camera is enabled → Refresh page
+            </p>
+
+            <h3>No Voice Feedback?</h3>
+            <p style="color: #9CA3AF; margin: 12px 0;">
+                Check system volume → Unmute browser tab → Try Chrome (best speech support)
+            </p>
+
+            <h3>Pose Not Detected?</h3>
+            <p style="color: #9CA3AF; margin: 12px 0;">
+                Step back to show full body → Improve lighting → Wear form-fitting clothing
+            </p>
+
+            <h3>Still Having Issues?</h3>
+            <p style="color: #9CA3AF; margin: 12px 0;">
+                Run <code>test-posture.html</code> to diagnose → Check console for errors → Try different browser
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Ready to Start?</h2>
+            <p style="color: #9CA3AF; margin-bottom: 24px;">
+                You have everything you need to perfect your golf posture. The AI coach is ready to guide you 
+                every step of the way with real-time feedback, voice coaching, and targeted drills.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="live-posture-feedback.html" class="cta-button">
+                    🏌️ Launch Live Posture Feedback
+                </a>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 32px;">
+                <h4>📝 Quick Checklist</h4>
+                <ul style="color: #9CA3AF; margin-left: 24px; margin-top: 12px;">
+                    <li>✅ Good lighting in room</li>
+                    <li>✅ Camera at chest height</li>
+                    <li>✅ 6-8 feet from camera</li>
+                    <li>✅ Full body visible in frame</li>
+                    <li>✅ Volume turned up</li>
+                    <li>✅ Form-fitting clothing</li>
+                    <li>✅ Clear background</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; padding: 40px; color: #9CA3AF;">
+            <p>Built with MediaPipe Pose • Web Speech API • HTML5 Canvas</p>
+            <p style="margin-top: 8px;">Part of the CoCoach AI Coaching Platform</p>
+            <p style="margin-top: 16px; font-size: 12px;">© 2025 CoCoach - All Rights Reserved</p>
+        </div>
+    </div>
+</body>
+</html>

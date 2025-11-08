@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - Profile Setup</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="page">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="back-btn" onclick="window.location.href='index.html'" aria-label="Back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="brand">CoCoach</div>
+            </div>
+            <button class="link" id="logoutBtn">Log out</button>
+        </header>
+
+        <main class="content">
+            <div class="alert error" id="errorBar" role="alert"></div>
+            <div class="alert success" id="successBar" role="alert"></div>
+
+            <section class="hero">
+                <h1 class="title">Profile Setup</h1>
+                <p class="subtitle">Help CoCoach personalize your training experience</p>
+            </section>
+
+            <form id="profileForm" novalidate>
+                    <div class="section">
+                        <h2 class="section-title">Basic Information</h2>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="name">Full Name</label>
+                                <div class="input-wrap">
+                                    <input type="text" id="name" placeholder="e.g., Alex Morgan" required>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="age">Age</label>
+                                <div class="input-wrap">
+                                    <input type="number" id="age" min="5" max="100" placeholder="e.g., 24" required>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="gender">Gender</label>
+                                <div class="input-wrap">
+                                    <select id="gender" required>
+                                        <option value="" selected disabled>Select gender</option>
+                                        <option value="female">Female</option>
+                                        <option value="male">Male</option>
+                                        <option value="nonbinary">Non-binary</option>
+                                        <option value="prefer_not">Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Physical Stats</h2>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="weight">Weight (kg)</label>
+                                <div class="input-wrap">
+                                    <input type="number" id="weight" min="20" max="300" step="0.1" placeholder="e.g., 70" required>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="height">Height (cm)</label>
+                                <div class="input-wrap">
+                                    <input type="number" id="height" min="80" max="250" step="0.1" placeholder="e.g., 175" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Sports Interest</h2>
+                        <div class="field">
+                            <label for="sports">Primary Sport</label>
+                            <div class="input-wrap">
+                                <select id="sports" required>
+                                    <option value="" disabled selected>Select your sport</option>
+                                    <option value="general">🏋️ General Training</option>
+                                    <option value="strength">💪 Strength Training</option>
+                                    <option value="running">🏃 Running</option>
+                                    <option value="football">⚽ Football</option>
+                                    <option value="basketball">🏀 Basketball</option>
+                                    <option value="yoga">🧘 Yoga</option>
+                                    <option value="cycling">🚴 Cycling</option>
+                                    <option value="badminton">🏸 Badminton</option>
+                                    <option value="tennis">🎾 Tennis</option>
+                                    <option value="swimming">🏊 Swimming</option>
+                                    <option value="boxing">🥊 Boxing</option>
+                                    <option value="dance">💃 Dance</option>
+                                    <option value="cricket">🏏 Cricket</option>
+                                    <option value="golf">⛳ Golf</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Health & Safety</h2>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="injuryFlag">Previous Injuries</label>
+                                <div class="input-wrap">
+                                    <select id="injuryFlag" required>
+                                        <option value="" disabled selected>Select option</option>
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="field full" id="injuryDetailsWrap" style="display:none;">
+                                <label for="injuryDetails">Injury Details</label>
+                                <div class="input-wrap">
+                                    <textarea id="injuryDetails" rows="3" placeholder="e.g., Left knee sprain in 2023, completed physio"></textarea>
+                                </div>
+                                <small class="help">Please share details for a safer workout.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn primary">Save & Continue</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>
+
+

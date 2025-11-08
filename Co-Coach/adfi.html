@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - AdFi</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        .page-header {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .feature-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+        
+        .feature-card:hover {
+            border-color: #7C3AED;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(124,58,237,.3);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .feature-name {
+            color: #F5F5F5;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .feature-desc {
+            color: #9CA3AF;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        
+        .stat-value {
+            color: #00B2FF;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        /* New AdFi sections */
+        .adfi-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 1060px) {
+            .adfi-grid { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0,178,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .panel-title {
+            color: #F5F5F5;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .panel-body { padding: 16px 20px; }
+        .muted { color: #9CA3AF; font-size: 13px; }
+
+        /* Streak */
+        .streak-wrap { display:flex; align-items:center; gap: 12px; }
+        .streak-count { font-size: 40px; font-weight: 900; color:#A3FF12; }
+        .streak-days { display:grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 12px; }
+        .streak-dot { width: 14px; height: 14px; border-radius:50%; background: rgba(156,163,175,.25); border:1px solid rgba(156,163,175,.3); }
+        .streak-dot.on { background: rgba(30,249,161,.85); border-color: rgba(30,249,161,.75); box-shadow: 0 0 0 3px rgba(30,249,161,.15); }
+        .streak-legend { display:flex; gap:8px; align-items:center; }
+
+        /* Compare */
+        .compare-grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+        .compare-grid.has-two { grid-template-columns: 1fr 1fr; }
+        .compare-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 12px; }
+        .compare-card#newWorkoutCard { background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.3); }
+        .compare-title { font-weight: 800; color:#F5F5F5; font-size: 14px; margin-bottom: 6px; }
+        .kv { display:flex; justify-content: space-between; color:#9CA3AF; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,.06); }
+        .kv:last-child { border-bottom: 0; }
+        .new-workout-btn { 
+            margin-top: 12px; 
+            background: rgba(0,178,255,.15); 
+            color: #00B2FF; 
+            border: 1px solid rgba(0,178,255,.3); 
+            border-radius: 6px; 
+            padding: 4px 10px; 
+            cursor: pointer; 
+            font-size: 11px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        .new-workout-btn:hover {
+            background: rgba(0,178,255,.25);
+            border-color: rgba(0,178,255,.5);
+        }
+        .new-workout-card { 
+            display: none;
+            background: rgba(124,58,237,.1); 
+            border: 1px solid rgba(124,58,237,.3); 
+            border-radius: 12px; 
+            padding: 12px; 
+            margin-top: 12px;
+        }
+        .new-workout-card.show { display: block; }
+
+        /* Updated list */
+        .updates-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+        .update-item { display:flex; align-items:center; gap:10px; background: rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.25); color:#C4B5FD; padding:10px 12px; border-radius:10px; }
+        .update-item .tag { font-size:11px; padding:4px 8px; border-radius:999px; background: rgba(0,178,255,.15); color:#00B2FF; border:1px solid rgba(0,178,255,.3); }
+        .improve-target-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .improve-box, .target-box { 
+            background: rgba(255,255,255,.03); 
+            border: 1px solid rgba(255,255,255,.08); 
+            border-radius: 12px; 
+            padding: 12px; 
+        }
+        .improve-box { border-color: rgba(255,55,95,.3); background: rgba(255,55,95,.05); }
+        .target-box { border-color: rgba(30,249,161,.3); background: rgba(30,249,161,.05); }
+        .box-title { font-weight: 800; color:#F5F5F5; font-size: 14px; margin-bottom: 8px; }
+        .box-title.improve { color: #FF6B8A; }
+        .box-title.target { color: #1EF9A1; }
+        .squats-points { 
+            margin-top: 12px; 
+            padding-top: 12px; 
+            border-top: 1px dashed rgba(255,255,255,.1); 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .workout-box {
+            background: rgba(0,178,255,.08);
+            border: 1px solid rgba(0,178,255,.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+        .workout-box.wednesday {
+            background: rgba(124,58,237,.15);
+            border: 1px solid rgba(124,58,237,.3);
+            position: relative;
+        }
+        .workout-box .workout-day {
+            font-weight: 700;
+            color: #00B2FF;
+            margin-bottom: 4px;
+        }
+        .workout-box.wednesday .workout-day {
+            color: #C4B5FD;
+        }
+        .workout-box .workout-detail {
+            font-size: 10px;
+            color: #9CA3AF;
+        }
+        .live-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #1EF9A1;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 6px rgba(30,249,161,.6);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        .updates-toggle-btn {
+            background: rgba(124,58,237,.15);
+            color: #C4B5FD;
+            border: 1px solid rgba(124,58,237,.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        .updates-toggle-btn:hover {
+            background: rgba(124,58,237,.25);
+            border-color: rgba(124,58,237,.5);
+        }
+        .updates-container {
+            display: none;
+        }
+        .updates-container.show {
+            display: block;
+        }
+
+        /* Recommendation */
+        .reco-card { background: linear-gradient(180deg, rgba(0,178,255,.08), rgba(124,58,237,.08)); border:1px solid rgba(124,58,237,.25); border-radius: 16px; padding: 16px; }
+        .reco-title { color:#F5F5F5; font-weight:900; font-size:16px; margin-bottom:6px; }
+        .reco-text { color:#9CA3AF; font-size:14px; }
+
+        .chart-wrap { position: relative; height: 260px; }
+        
+        .refresh-btn {
+            background: rgba(156,163,175,.15);
+            color: #9CA3AF;
+            border: 1px solid rgba(156,163,175,.3);
+            border-radius: 6px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+        .refresh-btn:hover {
+            background: rgba(0,178,255,.15);
+            color: #00B2FF;
+            border-color: rgba(0,178,255,.3);
+        }
+        .refresh-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">CoCoach</div>
+                <div class="sidebar-user">Your AI Coaching Hub</div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="como.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM19 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0z"/>
+                                <polyline points="5 17 5 5 19 5 19 17"/>
+                                <line x1="9" y1="5" x2="9" y2="17"/>
+                                <line x1="19" y1="5" x2="19" y2="17"/>
+                            </svg>
+                            <span>CoMo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="adfi.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span>AdFi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="proem.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            <span>ProEm</span>
+                        </a>
+                    </li>
+                    </ul>
+                </nav>
+                
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(156,163,175,0.1);">
+                    <button class="nav-link" onclick="logout()" style="width: 100%; color: #FF375F;">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="title">AdFi - Advanced Fitness</h1>
+                <p class="subtitle">Comprehensive analytics and performance tracking</p>
+            </div>
+
+            <div class="adfi-grid">
+                <div class="left-col" style="display:flex; flex-direction:column; gap:16px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Streak</div>
+                            <div class="muted" id="streakSubtitle">Consistency this week</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="streak-wrap">
+                                <div class="streak-count" id="streakCount">0</div>
+                                <div class="muted">day streak</div>
+                            </div>
+                            <div class="streak-days" id="streakDots"></div>
+                            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                                <div class="streak-legend"><div class="streak-dot on"></div><span class="muted">Workout</span></div>
+                                <div class="streak-legend"><div class="streak-dot"></div><span class="muted">Rest</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Adaptive Recommendation</div>
+                            <div class="muted" id="recoSubtitle">Based on trend</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="reco-card">
+                                <div class="reco-title" id="recoTitle">Maintain Momentum</div>
+                                <div class="reco-text" id="recoText">You're trending well. Keep consistency and introduce small progressive overload.</div>
+                                <div class="squats-points" id="squatsPoints">
+                                    <div class="workout-box">
+                                        <div class="workout-day">Monday</div>
+                                        <div class="workout-detail">Workout 1, Squat 1×8</div>
+                                    </div>
+                                    <div class="workout-box">
+                                        <div class="workout-day">Tuesday</div>
+                                        <div class="workout-detail">Workout 2, Squat 1×10</div>
+                                    </div>
+                                    <div class="workout-box wednesday" id="wednesdayWorkoutBox" style="display: none;">
+                                        <div class="workout-day">Wednesday<span class="live-indicator"></span></div>
+                                        <div class="workout-detail" id="wednesdayWorkoutDetail">Workout 3, Squat 1×6</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-col" style="display:flex; flex-direction:column; gap:16px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Improvement Graph</div>
+                            <div style="display: flex; align-items: center;">
+                                <button id="viewWeekly" style="margin-right:8px; background: rgba(0,178,255,.15); color:#00B2FF; border:1px solid rgba(0,178,255,.3); border-radius:8px; padding:6px 10px; cursor:pointer;">Weekly</button>
+                                <button id="viewMonthly" style="margin-right:8px; background: rgba(124,58,237,.15); color:#C4B5FD; border:1px solid rgba(124,58,237,.3); border-radius:8px; padding:6px 10px; cursor:pointer;">Monthly</button>
+                                <button id="refreshChart" class="refresh-btn" title="Refresh Chart">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="chart-wrap"><canvas id="improveChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Old Workout vs New Workout</div>
+                            <div class="muted">Past 4 weeks comparison</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="compare-grid">
+                                <div class="compare-card">
+                                    <div class="compare-title">Old Workout</div>
+                                    <div class="kv"><span>Duration</span><span id="oldDuration">1 min</span></div>
+                                    <div class="kv"><span>Squat</span><span id="oldSquat">1×8</span></div>
+                                </div>
+                                <div class="compare-card" id="newWorkoutCard" style="display: none;">
+                                    <div class="compare-title">New Workout</div>
+                                    <div class="kv"><span id="newWorkoutLabel">Live Wednesday<span class="live-indicator"></span></span><span id="newDuration">45 seconds</span></div>
+                                    <div class="kv"><span>Squat</span><span id="newSquat">1×6</span></div>
+                                </div>
+                            </div>
+                            <button class="new-workout-btn" id="showNewWorkoutBtn">Show New Workout</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Updated List</div>
+                            <div class="muted">Targets and exercises</div>
+                        </div>
+                        <div class="panel-body">
+                            <button class="updates-toggle-btn" id="toggleUpdatesBtn">Show Updates</button>
+                            <div class="updates-container" id="updatesContainer">
+                                <ul class="updates-list" id="updatesList"></ul>
+                                <div class="improve-target-grid">
+                                    <div class="improve-box">
+                                        <div class="box-title improve">Improve</div>
+                                        <div class="kv"><span>Sleep</span><span style="color: #FF6B8A;">5.5 hrs</span></div>
+                                        <div class="kv"><span>Protein</span><span style="color: #FF6B8A;">45g</span></div>
+                                        <div class="kv"><span>Water</span><span style="color: #FF6B8A;">1.2L</span></div>
+                                    </div>
+                                    <div class="target-box">
+                                        <div class="box-title target">Target</div>
+                                        <div class="kv"><span>Sleep</span><span style="color: #1EF9A1;">8 hrs</span></div>
+                                        <div class="kv"><span>Protein</span><span style="color: #1EF9A1;">120g</span></div>
+                                        <div class="kv"><span>Water</span><span style="color: #1EF9A1;">3L</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                link.classList.add('active');
+            }
+        });
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // ------- AdFi dynamic logic -------
+        const weekdayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+        const weekdayLabelsWithLive = ['Mon','Tue','Wed ●','Thu','Fri','Sat','Sun']; // All days shown, but graph stops at Wednesday
+        let weeklyWorkouts = [1,1,1,0,0,0,0]; // First three streaks filled (Mon, Tue, Wed)
+        let monthlyImprovement = [];
+        let weeklyMetric = [];
+        let workoutHistory = [];
+        let refreshToggle = false; // Toggle for refresh button behavior
+        let wednesdayWorkoutVisible = false; // Track if Wednesday workout should be visible
+        
+        // Helper function to create graph data that stops at Wednesday
+        function createGraphData(sourceData) {
+            // Take first 3 values and pad with null for remaining days
+            const graphData = sourceData.slice(0, 3);
+            // Add null values for Thu, Fri, Sat, Sun so the line stops at Wednesday
+            while(graphData.length < 7) {
+                graphData.push(null);
+            }
+            return graphData;
+        }
+
+        async function fetchWorkoutHistory(){
+            try {
+                const response = await fetch('/api/workout-history');
+                if (!response.ok) throw new Error('Failed to fetch workout history');
+                workoutHistory = await response.json();
+                processWorkoutData();
+                renderStreak();
+                if(improveChart) {
+                    improveChart.data.labels = weekdayLabelsWithLive;
+                    improveChart.data.datasets[0].data = createGraphData(weeklyMetric);
+                    improveChart.update('none');
+                }
+                computeUpdates();
+            } catch(err) {
+                console.error('Error fetching workout history:', err);
+                workoutHistory = [];
+                renderStreak();
+                computeUpdates();
+            }
+        }
+
+        function processWorkoutData(){
+            const now = new Date();
+            const last7Days = [];
+            const last30Days = [];
+            
+            for(let i = 6; i >= 0; i--){
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0,0,0,0);
+                last7Days.push(date);
+            }
+
+            for(let i = 29; i >= 0; i--){
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0,0,0,0);
+                last30Days.push(date);
+            }
+
+            // Only update weeklyWorkouts from history if there's actual data
+            // Otherwise keep the default [1,1,1,0,0,0,0] for three filled streaks (first three days)
+            if(workoutHistory.length > 0) {
+                weeklyWorkouts = last7Days.map(day => {
+                    return workoutHistory.some(w => {
+                        const wDate = new Date(w.timestamp);
+                        wDate.setHours(0,0,0,0);
+                        return wDate.getTime() === day.getTime();
+                    }) ? 1 : 0;
+                });
+                // Ensure first three are filled if no data exists (for demo purposes)
+                if(weeklyWorkouts.filter(x => x).length === 0) {
+                    weeklyWorkouts = [1,1,1,0,0,0,0];
+                }
+            }
+
+            weeklyMetric = last7Days.map(day => {
+                const dayWorkouts = workoutHistory.filter(w => {
+                    const wDate = new Date(w.timestamp);
+                    wDate.setHours(0,0,0,0);
+                    return wDate.getTime() === day.getTime();
+                });
+                const totalReps = dayWorkouts.reduce((sum, w) => sum + (w.reps_count || 0), 0);
+                const totalDuration = dayWorkouts.reduce((sum, w) => sum + (w.duration_seconds || 0), 0);
+                return Math.round((totalReps * 2 + totalDuration / 60) / 2);
+            });
+
+            const weeksInMonth = 12;
+            monthlyImprovement = [];
+            for(let week = 0; week < weeksInMonth; week++){
+                const weekStart = new Date(now);
+                weekStart.setDate(weekStart.getDate() - ((weeksInMonth - week) * 7));
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 7);
+                
+                const weekWorkouts = workoutHistory.filter(w => {
+                    const wDate = new Date(w.timestamp);
+                    return wDate >= weekStart && wDate < weekEnd;
+                });
+                
+                const avgReps = weekWorkouts.length > 0 
+                    ? weekWorkouts.reduce((sum, w) => sum + (w.reps_count || 0), 0) / weekWorkouts.length 
+                    : 0;
+                monthlyImprovement.push(Math.round(avgReps * 2));
+            }
+
+            calculateComparison();
+        }
+
+        function calculateComparison(){
+            // Set old workout values
+            document.getElementById('oldDuration').textContent = '1 min';
+            document.getElementById('oldSquat').textContent = '1×8';
+        }
+
+        function computeStreak(data){
+            // Count consecutive filled days from the beginning (for display purposes)
+            // This ensures the first three filled circles show a streak of 3
+            let streak = 0;
+            for(let i = 0; i < data.length; i++){
+                if(data[i]) streak++; 
+                else break;
+            }
+            // If no streak from beginning, count from end (for real workout data)
+            if(streak === 0) {
+                for(let i = data.length - 1; i >= 0; i--){
+                    if(data[i]) streak++; 
+                    else break;
+                }
+            }
+            return streak;
+        }
+
+        function renderStreak(){
+            const container = document.getElementById('streakDots');
+            container.innerHTML = '';
+            weekdayLabels.forEach((day, idx)=>{
+                const dot = document.createElement('div');
+                dot.className = 'streak-dot' + (weeklyWorkouts[idx] ? ' on' : '');
+                dot.title = day + (weeklyWorkouts[idx] ? ': Worked out' : ': Rest');
+                container.appendChild(dot);
+            });
+            const streak = computeStreak(weeklyWorkouts);
+            document.getElementById('streakCount').textContent = streak;
+            document.getElementById('streakSubtitle').textContent = streak >= 5 ? 'Strong consistency' : 'Build your streak';
+        }
+
+        // Improvement Chart
+        let improveChart;
+        function initImproveChart(){
+            const ctx = document.getElementById('improveChart').getContext('2d');
+            
+            // Show all 7 days but data only for first 3 (Mon, Tue, Wed)
+            const graphLabels = weekdayLabelsWithLive;
+            const graphData = createGraphData(weeklyMetric);
+            
+            improveChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: graphLabels,
+                    datasets: [{ 
+                        label: 'Weekly Metric', 
+                        data: graphData, 
+                        borderColor: '#00B2FF', 
+                        backgroundColor: 'rgba(0,178,255,.25)', 
+                        fill: true, // Fill area - will stop at null values
+                        tension: 0.35, 
+                        pointRadius: graphLabels.map((_, i) => i < 3 ? 3 : 0), // Only show points for Mon, Tue, Wed
+                        pointBackgroundColor: graphLabels.map((_, i) => {
+                            if(i === 2) return '#7C3AED'; // Wednesday highlight
+                            if(i < 3) return '#00B2FF';
+                            return 'transparent';
+                        }),
+                        pointBorderColor: graphLabels.map((_, i) => i < 3 ? '#fff' : 'transparent'),
+                        pointBorderWidth: graphLabels.map((_, i) => i < 3 ? 2 : 0),
+                        spanGaps: false // Don't connect across null values - line stops at Wednesday
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            labels: { color: '#F5F5F5' }
+                        }, 
+                        title: { 
+                            display: true, 
+                            text: 'Weekly Progress', 
+                            color: '#9CA3AF' 
+                        } 
+                    },
+                    scales: { 
+                        x: { 
+                            ticks: { color: '#9CA3AF' }, 
+                            grid: { color: 'rgba(156,163,175,0.15)' } 
+                        }, 
+                        y: { 
+                            ticks: { 
+                                color: '#9CA3AF',
+                                stepSize: 0.05,
+                                maxTicksLimit: 31,
+                                callback: function(value) {
+                                    return value.toFixed(2);
+                                }
+                            }, 
+                            grid: { 
+                                color: 'rgba(156,163,175,0.15)'
+                            },
+                            min: 0,
+                            max: 1.5
+                        } 
+                    }
+                }
+            });
+        }
+
+        function setWeeklyView(){
+            improveChart.config.type = 'line';
+            const graphLabels = weekdayLabelsWithLive;
+            const currentData = improveChart.data.datasets[0].data;
+            // Preserve current data if it exists and has the right structure, otherwise create new
+            let graphData;
+            if(currentData && currentData.length === 7) {
+                graphData = currentData;
+            } else {
+                graphData = createGraphData(weeklyMetric);
+            }
+            
+            improveChart.data.labels = graphLabels;
+            improveChart.data.datasets = [{ 
+                label: 'Weekly Metric', 
+                data: graphData, 
+                borderColor: '#00B2FF', 
+                backgroundColor: 'rgba(0,178,255,.25)', 
+                fill: true, // Fill area - will stop at null values
+                tension: 0.35, 
+                pointRadius: graphLabels.map((_, i) => i < 3 ? 3 : 0), // Only show points for Mon, Tue, Wed
+                pointBackgroundColor: graphLabels.map((_, i) => {
+                    if(i === 2) return '#7C3AED'; // Wednesday highlight
+                    if(i < 3) return '#00B2FF';
+                    return 'transparent';
+                }),
+                pointBorderColor: graphLabels.map((_, i) => i < 3 ? '#fff' : 'transparent'),
+                pointBorderWidth: graphLabels.map((_, i) => i < 3 ? 2 : 0),
+                spanGaps: false // Don't connect across null values - line stops at Wednesday
+            }];
+            improveChart.options.plugins.title.text = 'Weekly Progress';
+            improveChart.options.plugins.title.display = true;
+            improveChart.options.plugins.legend.display = true;
+            improveChart.options.scales.x.grid.display = true;
+            // Update Y-axis for weekly view
+            improveChart.options.scales.y.ticks.stepSize = 0.05;
+            improveChart.options.scales.y.ticks.maxTicksLimit = 31;
+            improveChart.options.scales.y.ticks.callback = function(value) {
+                return value.toFixed(2);
+            };
+            improveChart.options.scales.y.min = 0;
+            improveChart.options.scales.y.max = 1.5;
+            improveChart.options.scales.y.title = undefined;
+            improveChart.update('none');
+        }
+        function setMonthlyView(){
+            const monthLabels = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'];
+            improveChart.config.type = 'bar';
+            improveChart.data.labels = monthLabels;
+            improveChart.data.datasets = [{ 
+                label: 'Monthly Improvement (%)', 
+                data: monthlyImprovement, 
+                backgroundColor:'rgba(124,58,237,.35)', 
+                borderColor:'#7C3AED', 
+                borderWidth:1, 
+                borderRadius:6 
+            }];
+            improveChart.options.plugins.legend.display = true;
+            improveChart.options.scales.x.grid.display = true;
+            // Reset Y-axis for monthly view (auto scale)
+            improveChart.options.scales.y.ticks.stepSize = undefined;
+            improveChart.options.scales.y.ticks.maxTicksLimit = undefined;
+            improveChart.options.scales.y.ticks.callback = undefined;
+            improveChart.options.scales.y.min = undefined;
+            improveChart.options.scales.y.max = undefined;
+            improveChart.options.scales.y.title.display = false;
+            improveChart.update('none');
+        }
+        
+        function refreshChartData(){
+            // Ensure we're in weekly view (line chart with weekday labels)
+            const isWeeklyView = improveChart.data.labels.length === 7 && improveChart.data.labels[0] === 'Mon';
+            if(!isWeeklyView) {
+                setWeeklyView();
+            }
+            
+            // Toggle between two states for refresh behavior
+            refreshToggle = !refreshToggle;
+            
+            // For weekly view, set specific values for first 3 days, then null for rest
+            const refreshData = [0, 0, 0, null, null, null, null]; // Mon, Tue, Wed with data, rest null
+            refreshData[0] = 0; // Monday = 0
+            refreshData[1] = 1.0; // Tuesday = 1 minute (1.0)
+            
+            if(refreshToggle) {
+                refreshData[2] = 0.75; // Wednesday = 45 seconds (0.75 minutes)
+                // Show Wednesday workout box after refresh
+                wednesdayWorkoutVisible = true;
+                const wednesdayBox = document.getElementById('wednesdayWorkoutBox');
+                if(wednesdayBox) {
+                    wednesdayBox.style.display = 'block';
+                    document.getElementById('wednesdayWorkoutDetail').textContent = 'Workout 3, Squat 1×6';
+                }
+            } else {
+                refreshData[2] = 0; // Wednesday = 0
+                // Hide Wednesday workout box
+                wednesdayWorkoutVisible = false;
+                const wednesdayBox = document.getElementById('wednesdayWorkoutBox');
+                if(wednesdayBox) {
+                    wednesdayBox.style.display = 'none';
+                }
+            }
+            
+            // Update chart to line type for weekly view (all 7 labels, data stops at Wednesday)
+            improveChart.config.type = 'line';
+            improveChart.data.labels = weekdayLabelsWithLive;
+            improveChart.data.datasets = [{
+                label: 'Weekly Metric',
+                data: refreshData,
+                borderColor: '#00B2FF',
+                backgroundColor: 'rgba(0,178,255,.25)',
+                fill: true, // Fill area - will stop at null values
+                tension: 0.35,
+                pointRadius: weekdayLabelsWithLive.map((_, i) => i < 3 ? 3 : 0), // Only show points for Mon, Tue, Wed
+                pointBackgroundColor: weekdayLabelsWithLive.map((_, i) => {
+                    if(i === 2 && refreshData[2] > 0) return '#7C3AED'; // Wednesday highlight
+                    if(i < 3) return '#00B2FF';
+                    return 'transparent';
+                }),
+                pointBorderColor: weekdayLabelsWithLive.map((_, i) => i < 3 ? '#fff' : 'transparent'),
+                pointBorderWidth: weekdayLabelsWithLive.map((_, i) => i < 3 ? 2 : 0),
+                spanGaps: false // Don't connect across null values - line stops at Wednesday
+            }];
+            improveChart.options.plugins.title.text = 'Weekly Progress';
+            improveChart.options.plugins.title.display = true;
+            improveChart.options.plugins.legend.display = true;
+            improveChart.options.scales.x.grid.display = true;
+            improveChart.options.scales.y.ticks.stepSize = 0.05;
+            improveChart.options.scales.y.ticks.maxTicksLimit = 31;
+            improveChart.options.scales.y.ticks.callback = function(value) {
+                return value.toFixed(2);
+            };
+            improveChart.options.scales.y.min = 0;
+            improveChart.options.scales.y.max = 1.5;
+            improveChart.options.scales.y.title = undefined;
+            improveChart.update();
+        }
+
+        // Comparison and updates
+        function computeUpdates(){
+            const now = new Date();
+            const twoWeeksAgo = new Date(now);
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            const fourWeeksAgo = new Date(now);
+            fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+            const oldWorkouts = workoutHistory.filter(w => {
+                const wDate = new Date(w.timestamp);
+                return wDate >= fourWeeksAgo && wDate < twoWeeksAgo;
+            });
+            const newWorkouts = workoutHistory.filter(w => {
+                const wDate = new Date(w.timestamp);
+                return wDate >= twoWeeksAgo;
+            });
+
+            const oldAvgReps = oldWorkouts.length > 0 
+                ? Math.round(oldWorkouts.reduce((sum, w) => sum + (w.reps_count || 0), 0) / oldWorkouts.length)
+                : 0;
+            const newAvgReps = newWorkouts.length > 0 
+                ? Math.round(newWorkouts.reduce((sum, w) => sum + (w.reps_count || 0), 0) / newWorkouts.length)
+                : 0;
+            const oldAvgDuration = oldWorkouts.length > 0 
+                ? Math.round(oldWorkouts.reduce((sum, w) => sum + (w.duration_seconds || 0), 0) / oldWorkouts.length / 60)
+                : 1;
+            const newAvgDuration = newWorkouts.length > 0 
+                ? Math.round(newWorkouts.reduce((sum, w) => sum + (w.duration_seconds || 0), 0) / newWorkouts.length / 60)
+                : 1;
+
+            const volDelta = oldAvgReps > 0 ? Math.round(((newAvgReps - oldAvgReps)/oldAvgReps)*100) : 0;
+            const durDelta = oldAvgDuration > 0 ? Math.round(((newAvgDuration - oldAvgDuration)/oldAvgDuration)*100) : 0;
+
+            const list = document.getElementById('updatesList');
+            list.innerHTML = '';
+            const items = [];
+            if(volDelta > 5) {
+                items.push({ tag:'Progression', text:`Great, improvement! Volume up ${volDelta}%. Keep progressive overload going.` });
+            } else if(volDelta < -5) {
+                items.push({ tag:'Recovery', text:`Volume down ${Math.abs(volDelta)}%, Consider deload or recovery week.` });
+            }
+            if(durDelta > 10) {
+                items.push({ tag:'Endurance', text:`Session length up ${durDelta}%. Building work capacity.` });
+            }
+            if(weeklyWorkouts.filter(x=>x).length >= 5) items.push({ tag:'Consistency', text:'5+ sessions this week! Unlock advanced periodization planning.' });
+            else if(weeklyWorkouts.filter(x=>x).length >= 3) items.push({ tag:'Solid', text:'Good week! Aim for 4-5 sessions for optimal progress.' });
+            if(items.length === 0) items.push({ tag:'Get Started', text:'Start tracking workouts to see personalized recommendations!' });
+            items.forEach(it=>{
+                const li = document.createElement('li');
+                li.className = 'update-item';
+                li.innerHTML = `<span class="tag">${it.tag}</span><span>${it.text}</span>`;
+                list.appendChild(li);
+            });
+
+            const avgMonthly = monthlyImprovement.length > 0 ? monthlyImprovement.reduce((a,b)=>a+b,0)/monthlyImprovement.length : 0;
+            const streak = computeStreak(weeklyWorkouts);
+            const recoTitle = document.getElementById('recoTitle');
+            const recoText = document.getElementById('recoText');
+            
+            // Workout boxes are now static in HTML, no need to update them dynamically
+            // The Wednesday box already has the live indicator
+            
+            if(streak >= 5 && avgMonthly >= 10){
+                recoTitle.textContent = 'Progressive Overload Ready';
+                recoText.textContent = 'You are consistent and improving fast. Add 1 set to main lifts and 2.5% load next week.';
+            } else if(streak >= 3) {
+                recoTitle.textContent = 'Maintain Momentum';
+                recoText.textContent = 'Solid consistency. Keep current plan and tighten rest intervals for slight intensity gain.';
+            } else if(workoutHistory.length > 0) {
+                recoTitle.textContent = 'Build Consistency';
+                recoText.textContent = 'Good start! Aim for 3-4 sessions this week to build the habit.';
+            } else {
+                recoTitle.textContent = 'Start Your Journey';
+                recoText.textContent = 'Complete your first workout to see personalized recommendations!';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async ()=>{
+            await fetchWorkoutHistory();
+            renderStreak();
+            initImproveChart();
+            computeUpdates();
+            calculateComparison();
+            document.getElementById('viewWeekly').addEventListener('click', setWeeklyView);
+            document.getElementById('viewMonthly').addEventListener('click', setMonthlyView);
+            document.getElementById('refreshChart').addEventListener('click', refreshChartData);
+            
+            // Show new workout button handler
+            document.getElementById('showNewWorkoutBtn').addEventListener('click', function() {
+                const newWorkoutCard = document.getElementById('newWorkoutCard');
+                const compareGrid = document.querySelector('.compare-grid');
+                if(newWorkoutCard.style.display === 'none') {
+                    newWorkoutCard.style.display = 'block';
+                    compareGrid.classList.add('has-two');
+                    this.textContent = 'Hide New Workout';
+                } else {
+                    newWorkoutCard.style.display = 'none';
+                    compareGrid.classList.remove('has-two');
+                    this.textContent = 'Show New Workout';
+                }
+            });
+            
+            // Toggle updates list handler
+            document.getElementById('toggleUpdatesBtn').addEventListener('click', function() {
+                const updatesContainer = document.getElementById('updatesContainer');
+                if(updatesContainer.classList.contains('show')) {
+                    updatesContainer.classList.remove('show');
+                    this.textContent = 'Show Updates';
+                } else {
+                    updatesContainer.classList.add('show');
+                    this.textContent = 'Hide Updates';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

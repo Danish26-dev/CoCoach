@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - CoMo</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- MediaPipe and Three.js libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1/dist/kalidokit.umd.js"></script>
+    <script>
+        // Verify libraries are loaded
+        window.addEventListener('load', () => {
+            console.log('All scripts loaded');
+            console.log('THREE available:', typeof THREE !== 'undefined');
+            console.log('GLTFLoader available:', typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined');
+            if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader === 'undefined') {
+                console.error('GLTFLoader failed to load!');
+            }
+        });
+    </script>
+    <style>
+        .page-header {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .header-title { display: flex; flex-direction: column; gap: 6px; }
+        .title { margin: 0; }
+        .subtitle { margin: 0; }
+
+        /* Combined grid: left coach banner, right stacked banners */
+        .coach-and-banners { display: grid; grid-template-columns: 55% 45%; gap: 16px; align-items: start; margin-bottom: 24px; }
+        @media (max-width: 980px) { .coach-and-banners { grid-template-columns: 1fr; } }
+
+        .banner-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .banner-card:hover { transform: translateY(-3px); border-color: #00B2FF; box-shadow: 0 12px 48px rgba(0,178,255,.22); }
+        .banner-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .banner-title { color: #F5F5F5; font-weight: 700; letter-spacing: .3px; }
+        .banner-desc { color: #9CA3AF; font-size: 14px; line-height: 1.5; }
+        .banner-cta { margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #00B2FF, #7C3AED); color: #0B0B10; font-weight: 700; border: none; border-radius: 12px; padding: 10px 14px; cursor: pointer; text-decoration: none; }
+
+        /* Clickable card link styles */
+        .banner-link { display: block; text-decoration: none; color: inherit; position: relative; overflow: hidden; }
+        .banner-link:hover { transform: translateY(-3px); border-color: #00B2FF; box-shadow: 0 12px 48px rgba(0,178,255,.28); }
+        .banner-link::after { content: ""; position: absolute; inset: -40%; background: radial-gradient(600px 300px at 20% 0%, rgba(0,178,255,.10), transparent 50%), radial-gradient(600px 300px at 80% 100%, rgba(124,58,237,.10), transparent 50%); opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+        .banner-link:hover::after { opacity: 1; }
+
+        /* Left coach banner (single card containing text + GLB) */
+        .coach-banner { background: #1A1B20; border: 1px solid rgba(0,178,255,0.15); border-radius: 20px; padding: 12px; box-shadow: 0 10px 40px rgba(0,178,255,.08); }
+        .coach-banner-grid { display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 8px; min-height: 560px; }
+        @media (max-width: 980px) { .coach-banner-grid { grid-template-columns: 1fr; } }
+        .coach-panel { display: flex; flex-direction: column; gap: 8px; padding: 4px; }
+        .coach-headline { display: flex; flex-direction: column; gap: 6px; }
+        .coach-title { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #00B2FF, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px; }
+        .coach-blurb { color: #9CA3AF; font-size: 15px; line-height: 1.7; }
+        .coach-actions { display: none; }
+        .btn-ghost { display: none; }
+        .btn-primary { display: none; }
+        .avatar-view { background: #0B0B10; border: 1px solid rgba(0,178,255,0.15); border-radius: 16px; padding: 0; display: flex; align-items: stretch; justify-content: stretch; }
+        .mv-frame { width: 100%; height: 100%; min-height: 520px; border-radius: 12px; overflow: hidden; background: radial-gradient(1200px 600px at 20% 0%, rgba(0,178,255,.15), transparent 50%), radial-gradient(1200px 600px at 80% 100%, rgba(124,58,237,.15), transparent 50%); }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: rgba(30,249,161,0.15); color: #1EF9A1; border: 1px solid rgba(30,249,161,0.3); }
+
+        /* Right side stacked banners */
+        .banners-stack { display: grid; grid-template-rows: auto auto; gap: 16px; align-items: start; }
+        @media (max-width: 980px) { .banners-stack { grid-template-rows: auto; } }
+
+        /* Warmup list styling (none now) */
+        .drill-list, .note { display:none; }
+
+        /* CoMo Training Layout */
+        .como-training-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 980px) {
+            .como-training-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .webcam-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+
+        .webcam-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .webcam-controls-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: rgba(0,178,255,.12);
+            border: 1px solid rgba(0,178,255,.35);
+            color: #00B2FF;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .chip.pose-detected {
+            background: rgba(30,249,161,0.15);
+            border-color: rgba(30,249,161,0.3);
+            color: #1EF9A1;
+        }
+
+        .chip.exercise-selected {
+            background: rgba(124,58,237,0.15);
+            border-color: rgba(124,58,237,0.3);
+            color: #7C3AED;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #00B2FF, #7C3AED);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: #0B0B10;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,178,255,.35);
+        }
+
+        .start-btn.stop {
+            background: #FF375F;
+            color: white;
+        }
+
+        .webcam-video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0B0B10;
+        }
+
+        #webcamVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #webcamCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .live-feedback-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+
+        .live-feedback-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #F5F5F5;
+            margin-bottom: 16px;
+        }
+
+        .avatar-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0B0B10;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: relative;
+            z-index: 2;
+            background: #0B0B10;
+        }
+
+        .avatar-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9CA3AF;
+            font-size: 14px;
+            text-align: center;
+            z-index: 1;
+            pointer-events: none;
+            background: #0B0B10;
+        }
+
+        .exercise-selector {
+            margin-bottom: 16px;
+        }
+
+        .exercise-selector label {
+            display: block;
+            color: #9CA3AF;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .exercise-selector select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #0B0B10;
+            border: 1px solid rgba(0,178,255,0.25);
+            color: #F5F5F5;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .exercise-selector select:focus {
+            outline: none;
+            border-color: #00B2FF;
+        }
+
+        .feedback-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .feedback-item {
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #00B2FF;
+            background: rgba(0,178,255,0.05);
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #F5F5F5;
+        }
+
+        .feedback-item.good {
+            border-left-color: #1EF9A1;
+            background: rgba(30,249,161,0.05);
+        }
+
+        .feedback-item.warning {
+            border-left-color: #FFA500;
+            background: rgba(255,165,0,0.05);
+        }
+
+        .metrics-container {
+            margin-bottom: 16px;
+        }
+
+        .metrics-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9CA3AF;
+            margin-bottom: 8px;
+        }
+
+        .metric-display {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0,178,255,0.05);
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .metric-display span:first-child {
+            color: #9CA3AF;
+        }
+
+        .metric-display span:last-child {
+            color: #F5F5F5;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">CoCoach</div>
+                <div class="sidebar-user">Your AI Coaching Hub</div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="como.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM19 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0z"/>
+                                <polyline points="5 17 5 5 19 5 19 17"/>
+                                <line x1="9" y1="5" x2="9" y2="17"/>
+                                <line x1="19" y1="5" x2="19" y2="17"/>
+                            </svg>
+                            <span>CoMo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="adfi.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span>AdFi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="proem.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            <span>ProEm</span>
+                        </a>
+                    </li>
+                    </ul>
+                </nav>
+                
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(156,163,175,0.1);">
+                    <button class="nav-link" onclick="logout()" style="width: 100%; color: #FF375F;">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-title">
+                    <h1 class="title">Communication & Monitoring</h1>
+                    <p class="subtitle">Real-time coaching and monitoring features for optimal performance</p>
+                </div>
+                <span class="status-badge">Online</span>
+            </div>
+
+            <!-- CoMo Training Interface -->
+            <div class="como-training-container">
+                <!-- Left: Webcam Feed -->
+                <div class="webcam-card">
+                    <div class="webcam-controls">
+                        <div class="webcam-controls-left">
+                            <span class="chip">Camera</span>
+                            <span id="poseDetectedChip" class="chip pose-detected" style="display: none;">Pose Detected</span>
+                            <span id="exerciseChip" class="chip exercise-selected" style="display: none;"></span>
+                        </div>
+                        <button id="startBtn" class="start-btn">Start</button>
+                    </div>
+                    <div class="webcam-video-container">
+                        <video id="webcamVideo" autoplay playsinline></video>
+                        <canvas id="webcamCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right: Live Feedback Panel -->
+                <div class="live-feedback-card">
+                    <h2 class="live-feedback-title">Live Feedback</h2>
+                    
+                    <!-- Exercise Selector -->
+                    <div class="exercise-selector">
+                        <label for="exerciseSelect">Select Exercise (General Fitness)</label>
+                        <select id="exerciseSelect">
+                            <option value="">Choose an exercise...</option>
+                            <option value="squat">🏋️ Squat</option>
+                            <option value="pushup">💪 Push-up</option>
+                            <option value="bicepcurl">💪 Bicep Curl</option>
+                            <option value="golfswing">⛳ Golf Swing</option>
+                        </select>
+                    </div>
+
+                    <!-- 3D Avatar Container -->
+                    <div id="avatarContainer" class="avatar-container">
+                        <canvas id="avatarCanvas"></canvas>
+                        <div id="avatarPlaceholder" class="avatar-placeholder">
+                            <div>
+                                <div style="font-size: 32px; margin-bottom: 8px;">👤</div>
+                                <div>Avatar will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Display -->
+                    <div id="metricsContainer" class="metrics-container" style="display: none;">
+                        <div class="metrics-title">Metrics</div>
+                        <div id="metricsDisplay"></div>
+                    </div>
+
+                    <!-- Feedback Messages -->
+                    <div class="feedback-container" id="feedbackContainer">
+                        <div class="feedback-item">Choose an exercise and click Start to begin...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="como.js"></script>
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                link.classList.add('active');
+            }
+        });
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
+

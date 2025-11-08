@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - Dashboard</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        /* Dashboard-specific overrides */
+        .avatar-container { width: 320px; background: linear-gradient(180deg, rgba(0,178,255,0.06), rgba(124,58,237,0.06)); border: 1px solid rgba(0,178,255,0.15); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,178,255,.08); display:flex; }
+        #avatarCanvas { width: 100%; height: 100%; display: block; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+        .connect-wrap { display:flex; align-items:center; gap: 10px; }
+        .chart-wrap { position: relative; height: 240px; }
+        .metrics-row { display:flex; gap:16px; flex-wrap:wrap; align-items:stretch; }
+        .spo2-meta { display:flex; gap:12px; flex-wrap:wrap; color:#9CA3AF; font-size:12px; margin-top:8px; }
+        .spo2-chip { background: rgba(0,178,255,.12); border: 1px solid rgba(0,178,255,.3); color:#00B2FF; padding:4px 8px; border-radius:8px; }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="page">
+        <div class="dashboard">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-brand">CoCoach</div>
+                    <div class="sidebar-user">Your AI Coaching Hub</div>
+                </div>
+                
+                <nav>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                    <polyline points="9 22 9 12 15 12 15 22"/>
+                                </svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="como.html" class="nav-link">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM19 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0z"/>
+                                    <polyline points="5 17 5 5 19 5 19 17"/>
+                                    <line x1="9" y1="5" x2="9" y2="17"/>
+                                    <line x1="19" y1="5" x2="19" y2="17"/>
+                                </svg>
+                                <span>CoMo</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="adfi.html" class="nav-link">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <span>AdFi</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="proem.html" class="nav-link">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A 2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A 2 2 0 0 0 21 16z"/>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                </svg>
+                                <span>ProEm</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(156,163,175,0.1);">
+                    <button class="nav-link" onclick="logout()" style="width: 100%; color: #FF375F;">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+            </aside>
+            <main class="main-content">
+                <div class="top-bar">
+                    <div>
+                        <h1 class="section-title">Dashboard</h1>
+                    </div>
+                    <div class="connect-wrap">
+                        <span id="connPill" class="status-pill">Disconnected</span>
+                        <button class="connect-btn" id="watchBtn" onclick="toggleWatch()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="5" width="16" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="3" x2="8" y2="7"/>
+                            <line x1="16" y1="3" x2="16" y2="7"/>
+                            <line x1="12" y1="13" x2="12" y2="13"/>
+                        </svg>
+                        <span id="watchStatus">Connect Smart Watch</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="avatar-container" id="avatarContainer">
+                        <canvas id="avatarCanvas"></canvas>
+                    </div>
+                    <div id="metricsColumn" style="flex:1; min-width:320px;">
+                        <div class="cards">
+                            <div class="card">
+                                <h3>Heart Metrics (HRV, Resting HR, HR)</h3>
+                                <div class="chart-wrap"><canvas id="chartHeart"></canvas></div>
+                            </div>
+                            <div class="card">
+                                <h3>Sleep (Hours)</h3>
+                                <div class="chart-wrap"><canvas id="chartSleep"></canvas></div>
+                            </div>
+                            <div class="card">
+                                <h3>Temperature (°C)</h3>
+                                <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
+                            </div>
+                            <div class="card">
+                                <h3>SpO₂</h3>
+                                <div class="chart-wrap"><canvas id="chartSpO2"></canvas></div>
+                                <div class="spo2-meta" id="spo2Meta">
+                                    <span class="spo2-chip" id="spo2Status">Status: —</span>
+                                    <span class="spo2-chip" id="spo2PR">Pulse Rate: — bpm</span>
+                                    <span class="spo2-chip" id="spo2PI">Perfusion Index: —</span>
+                                    <span class="spo2-chip" id="spo2TS">Updated: —</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, model, controls;
+
+        function initAvatar() {
+            const canvas = document.getElementById('avatarCanvas');
+            const container = document.getElementById('avatarContainer');
+            if (!canvas || !container) return;
+
+            const width = container.clientWidth; const height = container.clientHeight || 480;
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0x0B0B10);
+            camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+            camera.position.set(0, 2.7, 4.5); // zoomed out a bit
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(width, height); renderer.setPixelRatio(window.devicePixelRatio);
+            const clipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            renderer.clippingPlanes = [clipPlane]; renderer.localClippingEnabled = true;
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0x00B2FF, 1); directionalLight.position.set(5, 10, 5); scene.add(directionalLight);
+            const pointLight = new THREE.PointLight(0x7C3AED, 0.5, 10); pointLight.position.set(0, 3, 2); scene.add(pointLight);
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; controls.target.set(0, 1, 0); controls.enableZoom = false; controls.minPolarAngle = Math.PI*0.2; controls.maxPolarAngle = Math.PI*0.9;
+            loadModel(); animate();
+        }
+
+        function resizeAvatar(){
+            const container = document.getElementById('avatarContainer');
+            if(!renderer || !camera || !container) return;
+            const width = container.clientWidth; const height = container.clientHeight || 480;
+            renderer.setSize(width, height); camera.aspect = width/height; camera.updateProjectionMatrix();
+        }
+
+        function loadModel() {
+            const loader = new GLTFLoader();
+            loader.load('./assets/present.glb', 
+                (gltf) => { model = gltf.scene; model.scale.set(1.2, 1.2, 1.2); scene.add(model); }, // slightly smaller
+                undefined,
+                (error) => console.error('Error:', error)
+            );
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { initAvatar(); window.addEventListener('resize', resizeAvatar); });
+        window.resizeAvatar = resizeAvatar;
+    </script>
+
+    <!-- Charts & Firebase -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDDE72PFFb9KJTVFQ_vjKUbqWieaYh9ahw",
+          authDomain: "cocoach-84520.firebaseapp.com",
+          databaseURL: "https://cocoach-84520-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "cocoach-84520",
+          storageBucket: "cocoach-84520.firebasestorage.app",
+          messagingSenderId: "724207575127",
+          appId: "1:724207575127:web:def24a298d50c734270312",
+          measurementId: "G-H907PCEXQ6"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function syncAvatarHeight(){
+            const avatar = document.getElementById('avatarContainer');
+            const metrics = document.getElementById('metricsColumn');
+            if(!avatar || !metrics) return;
+            avatar.style.height = metrics.offsetHeight + 'px';
+            if(window.resizeAvatar) window.resizeAvatar();
+        }
+
+        let chartHeart, chartSleep, chartTemp, chartSpO2;
+
+        const centerText = {
+            id: 'centerText', afterDraw(chart){ if(chart.config.type !== 'doughnut') return; const {ctx} = chart; const meta = chart.getDatasetMeta(0).data[0]; if(!meta) return; ctx.save(); ctx.font = '700 28px Segoe UI'; ctx.fillStyle = '#F5F5F5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const val = chart.data.datasets[0].data[0]; ctx.fillText(val + '%', meta.x, meta.y); ctx.restore(); }
+        };
+        function gradient(ctx, c1, c2){ const g = ctx.createLinearGradient(0,0,0,200); g.addColorStop(0,c1); g.addColorStop(1,c2); return g; }
+
+        function initCharts(){
+            const ctxHeart = document.getElementById('chartHeart').getContext('2d');
+            const ctxSleep = document.getElementById('chartSleep').getContext('2d');
+            const ctxTemp = document.getElementById('chartTemp').getContext('2d');
+            const ctxSpO2 = document.getElementById('chartSpO2').getContext('2d');
+
+            const gHRV = gradient(ctxHeart, 'rgba(124,58,237,0.25)', 'rgba(124,58,237,0.05)');
+            const gRHR = gradient(ctxHeart, 'rgba(0,178,255,0.25)', 'rgba(0,178,255,0.05)');
+            const gHR  = gradient(ctxHeart, 'rgba(30,249,161,0.25)', 'rgba(30,249,161,0.05)');
+
+            chartHeart = new Chart(ctxHeart, {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    { label: 'HRV (ms)', data: [], yAxisID: 'y1', borderColor: '#7C3AED', backgroundColor: gHRV, fill: true, pointRadius: 0, borderWidth: 2, tension: .35, borderDash: [6,4] },
+                    { label: 'Resting HR (bpm)', data: [], yAxisID: 'y', borderColor: '#00B2FF', backgroundColor: gRHR, fill: true, pointRadius: 0, borderWidth: 2, tension: .35 },
+                    { label: 'Heart Rate (bpm)', data: [], yAxisID: 'y', borderColor: '#1EF9A1', backgroundColor: gHR, fill: true, pointRadius: 0, borderWidth: 2, tension: .35 }
+                ]},
+                options: {
+                    responsive: true,
+                    interaction: { mode:'index', intersect:false },
+                    plugins:{ legend:{ labels:{ color:'#F5F5F5' } }, title:{ display:true, text:'Heart Metrics', color:'#9CA3AF', font:{ weight:'600' } } },
+                    scales:{
+                        x:{ ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.15)', borderColor:'rgba(156,163,175,0.25)' } },
+                        y:{ position:'left', ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.12)' } },
+                        y1:{ position:'right', ticks:{ color:'#C4B5FD' }, grid:{ drawOnChartArea:false } }
+                    }
+                }
+            });
+
+            chartSleep = new Chart(ctxSleep, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Sleep (hrs)', data: [], backgroundColor: 'rgba(0,178,255,.35)', borderColor:'#00B2FF', borderWidth:1, borderRadius:6 }]},
+                options: { responsive: true, plugins:{ legend:{ labels:{ color:'#F5F5F5' } }, title:{ display:true, text:'Sleep Duration', color:'#9CA3AF', font:{ weight:'600' } } }, scales:{ x:{ ticks:{ color:'#9CA3AF' }, grid:{ display:false } }, y:{ ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.15)' } } } }
+            });
+
+            chartTemp = new Chart(ctxTemp, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Body Temp (°C)', data: [], borderColor:'#A3FF12', backgroundColor: gradient(ctxTemp, 'rgba(163,255,18,0.35)', 'rgba(163,255,18,0.05)'), fill:true, pointRadius:0, borderWidth:2, tension:.35 }]},
+                options: { responsive: true, plugins:{ legend:{ labels:{ color:'#F5F5F5' } }, title:{ display:true, text:'Temperature', color:'#9CA3AF', font:{ weight:'600' } } }, scales:{ x:{ ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.15)' } }, y:{ ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.15)' } } } }
+            });
+
+            chartSpO2 = new Chart(ctxSpO2, {
+                type: 'doughnut',
+                data: { labels: ['SpO2','Remaining'], datasets: [{ data:[98, 2], backgroundColor:['#1EF9A1','rgba(156,163,175,.2)'], borderWidth:0 }]},
+                options: { responsive: true, plugins:{ legend:{ display:false }, title:{ display:true, text:'Blood Oxygen Saturation', color:'#9CA3AF', font:{ weight:'600' } } }, cutout: '70%' },
+                plugins: [centerText]
+            });
+        }
+
+        function setZeroData(){
+            const labels7 = [1,2,3,4,5,6,7];
+            // Heart
+            chartHeart.data.labels = labels7;
+            chartHeart.data.datasets[0].data = [0,0,0,0,0,0,0];
+            chartHeart.data.datasets[1].data = [0,0,0,0,0,0,0];
+            chartHeart.data.datasets[2].data = [0,0,0,0,0,0,0];
+            chartHeart.update('none');
+            // Sleep
+            chartSleep.data.labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            chartSleep.data.datasets[0].data = [0,0,0,0,0,0,0];
+            chartSleep.update('none');
+            // Temperature
+            chartTemp.data.labels = labels7;
+            chartTemp.data.datasets[0].data = [0,0,0,0,0,0,0];
+            chartTemp.update('none');
+            // SpO2
+            chartSpO2.data.datasets[0].data = [0, 100];
+            chartSpO2.update('none');
+            // Meta labels remain as '—'
+            syncAvatarHeight();
+        }
+
+        function listenFirebase(){
+            db.ref('/heart').on('value', snap=>{
+                const v = snap.val() || {};
+                const hrv = Array.isArray(v.hrv)? v.hrv : [65,62,68,70,66,69,71];
+                const rhr = Array.isArray(v.rhr)? v.rhr : [60,59,61,60,58,59,60];
+                const hr  = Array.isArray(v.hr)?  v.hr  : [82,85,80,88,84,86,83];
+                const labels = (hr || rhr || hrv).map((_,i)=> i+1);
+                chartHeart.data.labels = labels;
+                chartHeart.data.datasets[0].data = hrv;
+                chartHeart.data.datasets[1].data = rhr;
+                chartHeart.data.datasets[2].data = hr;
+                chartHeart.update('none');
+                syncAvatarHeight();
+            });
+
+            db.ref('/sleep').on('value', snap=>{
+                const v = snap.val() || {};
+                const hours = Array.isArray(v.hours)? v.hours : [6.5, 7.2, 7.8, 6.9, 8.1, 7.4, 7.0];
+                chartSleep.data.labels = hours.map((_,i)=> ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i] || (i+1));
+                chartSleep.data.datasets[0].data = hours;
+                chartSleep.update('none');
+                syncAvatarHeight();
+            });
+
+            db.ref('/temperature').on('value', snap=>{
+                const v = snap.val() || {};
+                const t = Array.isArray(v.celsius)? v.celsius : [36.7,36.6,36.8,37.0,36.9,36.7,36.8];
+                chartTemp.data.labels = t.map((_,i)=> i+1);
+                chartTemp.data.datasets[0].data = t;
+                chartTemp.update('none');
+                syncAvatarHeight();
+            });
+
+            db.ref('/spo2').on('value', snap=>{
+                const v = snap.val() || {};
+                const val = (typeof v.value === 'number') ? v.value : 98;
+                const pr  = (typeof v.pr === 'number') ? v.pr : 72;
+                const pi  = (typeof v.pi === 'number') ? v.pi : 3.1;
+                const ts  = v.ts ? new Date(v.ts).toLocaleString() : new Date().toLocaleString();
+                chartSpO2.data.datasets[0].data = [val, Math.max(0,100-val)];
+                chartSpO2.update('none');
+                const status = val >= 95 ? 'Normal' : (val >= 90 ? 'Low' : 'Critical');
+                document.getElementById('spo2Status').textContent = 'Status: ' + status;
+                document.getElementById('spo2PR').textContent = 'Pulse Rate: ' + pr + ' bpm';
+                document.getElementById('spo2PI').textContent = 'Perfusion Index: ' + pi;
+                document.getElementById('spo2TS').textContent = 'Updated: ' + ts;
+                syncAvatarHeight();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            initCharts();
+            const isConnected = localStorage.getItem('watchConnected') === 'true';
+            if (isConnected) {
+                listenFirebase();
+            } else {
+                setZeroData();
+            }
+            setTimeout(syncAvatarHeight, 300);
+            window.addEventListener('resize', syncAvatarHeight);
+        });
+    </script>
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        navLinks.forEach(link => { if (link.getAttribute('href') === currentPage) { link.classList.add('active'); } });
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        function toggleWatch() {
+            const btn = document.getElementById('watchBtn');
+            const status = document.getElementById('watchStatus');
+            const pill = document.getElementById('connPill');
+            const isConnected = btn.classList.contains('connected');
+            if (isConnected) {
+                btn.classList.remove('connected');
+                status.textContent = 'Connect Smart Watch';
+                localStorage.setItem('watchConnected', 'false');
+                if (pill) { pill.textContent = 'Disconnected'; pill.classList.remove('live'); }
+                // Keep current zeros until user reconnects
+            }
+            else {
+                btn.classList.add('connected');
+                status.textContent = '✓ Connected';
+                localStorage.setItem('watchConnected', 'true');
+                if (pill) { pill.textContent = 'Live'; pill.classList.add('live'); }
+                const alert = document.createElement('div');
+                alert.style.cssText = 'position:fixed;top:20px;right:20px;background:#1A1B20;color:#1EF9A1;padding:16px 24px;border-radius:12px;border:1px solid rgba(30,249,161,.3);z-index:9999;font-weight:600;';
+                alert.textContent = '✓ Smart Watch Connected Successfully!';
+                document.body.appendChild(alert);
+                setTimeout(()=>{ alert.style.transition='opacity 0.3s'; alert.style.opacity='0'; setTimeout(()=> alert.remove(), 300); }, 1200);
+                // Refresh to load live values
+                setTimeout(()=>{ location.reload(); }, 500);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const isConnected = localStorage.getItem('watchConnected') === 'true';
+            const pill = document.getElementById('connPill');
+            if (isConnected) {
+                document.getElementById('watchBtn').classList.add('connected');
+                document.getElementById('watchStatus').textContent = '✓ Connected';
+                if (pill) { pill.textContent = 'Live'; pill.classList.add('live'); }
+            } else {
+                if (pill) { pill.textContent = 'Disconnected'; pill.classList.remove('live'); }
+            }
+        });
+    </script>
+</body>
+</html>

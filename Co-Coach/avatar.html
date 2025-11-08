@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - Avatar Creation</title>
+    <link rel="stylesheet" href="avatar.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="page">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="back-btn" onclick="window.location.href='profile.html'" aria-label="Back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="brand">CoCoach</div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="hero">
+                <h1 class="title">Create Your Coach</h1>
+                <p class="subtitle">Customize your AI coaching persona for <span class="chip">CoCoach</span></p>
+            </div>
+
+            <div class="builder">
+                <div class="preview-section">
+                    <div class="preview" id="avatarPreview">
+                        <div id="loading">Loading 3D Avatar...</div>
+                        <canvas id="avatarCanvas"></canvas>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="saveBtn" class="btn primary">Continue</button>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <div class="control-group">
+                        <label class="control-label">Coach Pose</label>
+                        <select id="pose" onchange="updateModelPose()">
+                            <option value="standing">Standing</option>
+                            <option value="running">Running</option>
+                            <option value="squat">Squatting</option>
+                            <option value="yoga">Yoga</option>
+                            <option value="boxing">Boxing</option>
+                            <option value="cycling">Cycling</option>
+                            <option value="stretching">Stretching</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Outfit Color</label>
+                        <select id="outfit" onchange="updateModelColors()">
+                            <option value="blue">Blue</option>
+                            <option value="purple">Purple</option>
+                            <option value="lime">Lime</option>
+                            <option value="red">Red</option>
+                            <option value="mint">Mint</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Skin Tone</label>
+                        <select id="skintone" onchange="updateSkinTone()">
+                            <option value="1">Light</option>
+                            <option value="2">Fair</option>
+                            <option value="3" selected>Medium</option>
+                            <option value="4">Olive</option>
+                            <option value="5">Brown</option>
+                            <option value="6">Dark</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Training Type</label>
+                        <select id="sport">
+                            <option value="general">🏋️ General Training</option>
+                            <option value="strength">💪 Strength Training</option>
+                            <option value="running">🏃 Running</option>
+                            <option value="yoga">🧘 Yoga</option>
+                            <option value="boxing">🥊 Boxing</option>
+                            <option value="cycling">🚴 Cycling</option>
+                            <option value="golf">⛳ Golf</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Energy Level <span id="energyLabel">50%</span></label>
+                        <input type="range" id="energy" min="0" max="100" value="50" oninput="updateLabels()">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Glow Effect <span id="glowLabel">50%</span></label>
+                        <input type="range" id="glow" min="0" max="100" value="50" oninput="updateGlow(); updateLabels()">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="avatar.js"></script>
+</body>
+</html>

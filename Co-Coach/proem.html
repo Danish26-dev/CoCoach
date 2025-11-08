@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - ProEm</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(163,255,18,0.3); }
+            50% { box-shadow: 0 0 30px rgba(163,255,18,0.5); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, rgba(0,178,255,0.1) 0%, rgba(124,58,237,0.1) 100%);
+            border: 1px solid rgba(0,178,255,0.25);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.12);
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(163,255,18,0.1), transparent 70%);
+            animation: pulse 4s infinite;
+        }
+        .page-header > * { position: relative; z-index: 1; }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(26,27,32,0.95) 0%, rgba(26,27,32,0.98) 100%);
+            border: 2px solid rgba(0,178,255,0.2);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 20px 60px rgba(0,178,255,.15);
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+        @media (max-width: 900px) { .hero-section { grid-template-columns: 1fr; } }
+        
+        .hero-content h1 {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00B2FF, #A3FF12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: slideIn 0.6s ease-out;
+        }
+        .hero-content p {
+            color: #9CA3AF;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        .hero-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(163,255,18,0.15), rgba(0,178,255,0.15));
+            border: 1px solid rgba(163,255,18,0.3);
+            border-radius: 20px;
+            color: #A3FF12;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: glow 2s infinite;
+        }
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .quick-stat {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .quick-stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #F5F5F5;
+            margin-bottom: 4px;
+        }
+        .quick-stat-label {
+            font-size: 11px;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .demo-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(26,27,32,0.95);
+            border: 1px solid rgba(0,178,255,0.3);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .demo-mode-toggle:hover {
+            border-color: rgba(163,255,18,0.5);
+            box-shadow: 0 0 20px rgba(163,255,18,0.2);
+        }
+        .demo-mode-toggle.active {
+            background: rgba(163,255,18,0.15);
+            border-color: rgba(163,255,18,0.5);
+        }
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #9CA3AF;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        .demo-mode-toggle.active .toggle-switch {
+            background: rgba(163,255,18,0.3);
+        }
+        .demo-mode-toggle.active .toggle-switch::after {
+            left: 22px;
+            background: #A3FF12;
+        }
+        
+        .proem-grid { display:grid; grid-template-columns: 1fr; gap: 20px; }
+        .section { 
+            background:#1A1B20; 
+            border:1px solid rgba(0,178,255,0.15); 
+            border-radius:16px; 
+            box-shadow:0 10px 40px rgba(0,178,255,.08);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .section:hover {
+            border-color: rgba(0,178,255,0.3);
+            box-shadow: 0 15px 50px rgba(0,178,255,.15);
+            transform: translateY(-2px);
+        }
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(163,255,18,0.05), transparent);
+            transition: left 0.5s;
+        }
+        .section:hover::before {
+            left: 100%;
+        }
+        .section-header { 
+            padding:20px 24px; 
+            border-bottom:1px solid rgba(0,178,255,0.12); 
+            display:flex; 
+            justify-content:space-between; 
+            align-items:center;
+            background: rgba(0,178,255,0.03);
+        }
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, rgba(0,178,255,0.2), rgba(124,58,237,0.2));
+            border: 1px solid rgba(0,178,255,0.3);
+            border-radius: 8px;
+            color: #00B2FF;
+            font-weight: 900;
+            font-size: 14px;
+            margin-right: 12px;
+        }
+        .section-title { color:#F5F5F5; font-weight:900; font-size:18px; display: flex; align-items: center; }
+        .section-sub { color:#9CA3AF; font-size:13px; margin-top: 4px; }
+        .section-body { padding:20px 24px; }
+
+        .kv { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,.06); color:#9CA3AF; font-size:14px; transition: all 0.2s; }
+        .kv:hover { background: rgba(255,255,255,0.02); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: 8px; }
+        .kv:last-child { border-bottom:0; }
+        .stat { color:#F5F5F5; font-weight:800; animation: countUp 0.5s ease-out; }
+
+        .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .pill { padding:8px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.12); font-size:12px; font-weight:700; transition: all 0.3s; }
+        .pill.good { background: rgba(30,249,161,.12); color:#1EF9A1; border-color: rgba(30,249,161,.35); }
+        .pill.warn { background: rgba(255,176,0,.1); color:#FFB000; border-color: rgba(255,176,0,.35); }
+        .pill:hover { transform: scale(1.05); }
+
+        .chart-wrap { 
+            position:relative; 
+            height:350px; 
+            min-height: 350px;
+            width: 100%;
+        }
+        .chart-wrap canvas { 
+            animation: fadeIn 0.8s ease-out;
+            max-height: 100%;
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(163,255,18,0.1);
+            border: 1px solid rgba(163,255,18,0.3);
+            border-radius: 20px;
+            color: #A3FF12;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .ai-showcase {
+            background: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(0,178,255,0.1) 100%);
+            border: 1px solid rgba(124,58,237,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+        .ai-showcase-title {
+            color: #C4B5FD;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-showcase-text {
+            color: #F5F5F5;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .ai-feature {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .ai-feature-title {
+            color: #00B2FF;
+            font-weight: 700;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .ai-feature-desc {
+            color: #9CA3AF;
+            font-size: 11px;
+        }
+        
+        .expandable-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+        .expandable-section.expanded {
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .expand-btn {
+            background: rgba(0,178,255,.1);
+            border: 1px solid rgba(0,178,255,.3);
+            color: #00B2FF;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 8px 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .expand-btn:hover {
+            background: rgba(0,178,255,.2);
+            border-color: rgba(0,178,255,.5);
+            color: #A3FF12;
+        }
+        .expand-btn.expanded span:first-child {
+            transform: rotate(180deg);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26,27,32,0.95);
+            color: #F5F5F5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(0,178,255,0.3);
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+        
+        .progress-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26,27,32,0.95);
+            border: 1px solid rgba(0,178,255,0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 999;
+        }
+        .progress-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(156,163,175,0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .progress-dot:hover {
+            background: rgba(0,178,255,0.5);
+            transform: scale(1.3);
+        }
+        .progress-dot.active {
+            background: #00B2FF;
+            box-shadow: 0 0 10px rgba(0,178,255,0.5);
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #1EF9A1;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 6px rgba(30,249,161,.6);
+        }
+        
+        .view-toggle {
+            background: rgba(156,163,175,.15);
+            color: #9CA3AF;
+            border: 1px solid rgba(156,163,175,.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+        .view-toggle:hover {
+            background: rgba(0,178,255,.15);
+            color: #00B2FF;
+            border-color: rgba(0,178,255,.3);
+        }
+        .view-toggle.active {
+            background: rgba(0,178,255,.25);
+            color: #00B2FF;
+            border-color: rgba(0,178,255,.5);
+        }
+        
+        .refresh-btn {
+            background: rgba(156,163,175,.15);
+            color: #9CA3AF;
+            border: 1px solid rgba(156,163,175,.3);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+        .refresh-btn:hover {
+            background: rgba(0,178,255,.15);
+            color: #00B2FF;
+            border-color: rgba(0,178,255,.3);
+        }
+        .refresh-btn:active {
+            transform: rotate(360deg);
+        }
+        .refresh-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+        
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .panel-style-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0,178,255,0.12);
+            background: rgba(0,178,255,0.03);
+        }
+        .panel-title-main {
+            color: #F5F5F5;
+            font-size: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-subtitle {
+            color: #9CA3AF;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        .tech-stack-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        .tech-stack-title {
+            color: #00B2FF;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .tech-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tech-badge {
+            padding: 6px 12px;
+            background: rgba(0,178,255,0.1);
+            border: 1px solid rgba(0,178,255,0.2);
+            border-radius: 20px;
+            color: #00B2FF;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .testimonial-section {
+            background: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(0,178,255,0.1) 100%);
+            border: 1px solid rgba(124,58,237,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .testimonial-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .testimonial-text {
+            color: #F5F5F5;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+        .testimonial-author {
+            color: #00B2FF;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .testimonial-role {
+            color: #9CA3AF;
+            font-size: 11px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 24px;
+            }
+            .hero-content h1 {
+                font-size: 28px;
+            }
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .demo-mode-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+            .section-header {
+                padding: 16px;
+            }
+            .section-body {
+                padding: 16px;
+            }
+            .progress-indicator {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px 12px;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            .key-features-box {
+                font-size: 11px;
+            }
+            .key-features-box > div:last-child {
+                grid-template-columns: 1fr;
+            }
+            .impact-metrics {
+                grid-template-columns: 1fr !important;
+            }
+            .testimonial-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .streak-row { display:flex; align-items:center; gap:12px; }
+        .streak-count { font-size:36px; font-weight:900; color:#A3FF12; }
+        .dots { display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; }
+        .dot { width:14px; height:14px; border-radius:50%; background: rgba(156,163,175,.25); border:1px solid rgba(156,163,175,.3); }
+        .dot.on { background: rgba(30,249,161,.85); border-color: rgba(30,249,161,.75); box-shadow: 0 0 0 3px rgba(30,249,161,.12); }
+
+        .voice-ui { display:grid; grid-template-columns: 1fr; gap:12px; }
+        .voice-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .btn { cursor:pointer; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,178,255,.15); color:#00B2FF; font-weight:800; }
+        .btn.alt { background: rgba(124,58,237,.15); color:#C4B5FD; border-color: rgba(124,58,237,.35); }
+        .btn.red { background: rgba(255,59,48,.12); color:#FF3B30; border-color: rgba(255,59,48,.35); }
+        .voice-output { background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px; color:#F5F5F5; min-height:48px; }
+
+        .quality-score { text-align:center; padding:32px; }
+        .score-circle { 
+            width:160px; 
+            height:160px; 
+            margin:0 auto 20px; 
+            border-radius:50%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            font-size:52px; 
+            font-weight:900; 
+            border:8px solid; 
+            position:relative;
+            transition: all 0.3s;
+            animation: countUp 0.8s ease-out;
+        }
+        .score-circle:hover {
+            transform: scale(1.05);
+        }
+        .score-circle.elite { 
+            background: rgba(163,255,18,.12); 
+            color:#A3FF12; 
+            border-color:#A3FF12; 
+            box-shadow: 0 0 40px rgba(163,255,18,.35);
+            animation: glow 2s infinite, countUp 0.8s ease-out;
+        }
+        .score-circle.advanced { 
+            background: rgba(0,178,255,.12); 
+            color:#00B2FF; 
+            border-color:#00B2FF; 
+            box-shadow: 0 0 40px rgba(0,178,255,.35); 
+        }
+        .score-circle.developing { 
+            background: rgba(255,176,0,.12); 
+            color:#FFB000; 
+            border-color:#FFB000; 
+            box-shadow: 0 0 40px rgba(255,176,0,.35); 
+        }
+        .score-label { font-size:16px; color:#9CA3AF; margin-top:12px; font-weight:600; }
+
+        .metrics-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; }
+        @media (max-width: 900px) { .metrics-grid { grid-template-columns: 1fr; } }
+        .metric-card { 
+            background: rgba(255,255,255,.05); 
+            border:1px solid rgba(255,255,255,.1); 
+            border-radius:16px; 
+            padding:20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #00B2FF, #A3FF12);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .metric-card:hover {
+            border-color: rgba(0,178,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,178,255,.15);
+            transform: translateY(-4px);
+        }
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+        .metric-label { 
+            font-size:11px; 
+            color:#9CA3AF; 
+            text-transform:uppercase; 
+            letter-spacing:1px; 
+            margin-bottom:12px;
+            font-weight:700;
+        }
+        .metric-value { 
+            font-size:36px; 
+            font-weight:900; 
+            color:#F5F5F5;
+            animation: countUp 0.6s ease-out;
+        }
+        .metric-unit { font-size:16px; color:#9CA3AF; margin-left:6px; }
+        .metric-trend { font-size:13px; margin-top:8px; font-weight:700; display: flex; align-items: center; gap: 4px; }
+        .metric-trend.up { color:#1EF9A1; }
+        .metric-trend.down { color:#FFB000; }
+
+        .forecast-box { background: linear-gradient(135deg, rgba(124,58,237,.15) 0%, rgba(0,178,255,.15) 100%); border:1px solid rgba(124,58,237,.35); border-radius:12px; padding:20px; margin-top:12px; }
+        .forecast-text { font-size:16px; color:#F5F5F5; font-weight:700; line-height:1.6; }
+        .forecast-sub { font-size:13px; color:#C4B5FD; margin-top:8px; }
+
+        .alert-box { background: rgba(255,59,48,.08); border:1px solid rgba(255,59,48,.35); border-radius:12px; padding:16px; margin-top:12px; display:none; }
+        .alert-box.show { display:block; }
+        .alert-title { font-size:14px; font-weight:900; color:#FF3B30; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+        .alert-text { font-size:13px; color:#F5F5F5; }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">CoCoach</div>
+                <div class="sidebar-user">Your AI Coaching Hub</div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="como.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM19 17a2 2 0 1 0-4 0 2 2 0 0 0 4 0z"/>
+                                <polyline points="5 17 5 5 19 5 19 17"/>
+                                <line x1="9" y1="5" x2="9" y2="17"/>
+                                <line x1="19" y1="5" x2="19" y2="17"/>
+                            </svg>
+                            <span>CoMo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="adfi.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span>AdFi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="proem.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            <span>ProEm</span>
+                        </a>
+                    </li>
+                    </ul>
+                </nav>
+                
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(156,163,175,0.1);">
+                    <button class="nav-link" onclick="logout()" style="width: 100%; color: #FF375F;">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                        <h1 class="title" style="margin-bottom: 8px;">ProEm - Professional Enhancement</h1>
+                        <p class="subtitle" style="font-size: 15px; margin: 0;">AI-Powered Performance Analytics for Elite Athletes</p>
+                        </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="padding: 8px 16px; background: rgba(163,255,18,0.1); border: 1px solid rgba(163,255,18,0.3); border-radius: 20px; font-size: 12px; font-weight: 700; color: #A3FF12;">
+                            ⚡ LIVE DATA
+                    </div>
+                            </div>
+                            </div>
+                        </div>
+            
+            <div class="hero-section">
+                <div class="hero-content">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <h1 style="margin: 0;">AI-Powered Performance Analytics</h1>
+                        <span class="ai-badge" style="font-size: 10px; padding: 4px 10px;">
+                            <span>🏆</span>
+                            <span>PRO</span>
+                        </span>
+                        </div>
+                    <p style="font-size: 17px; line-height: 1.7; margin-bottom: 20px;">Your personal AI-powered performance analytics dashboard. Track your progress, analyze your form, and get personalized insights tailored to your training journey.</p>
+                    
+                    <div class="impact-metrics" id="personalMetrics" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; padding: 16px; background: rgba(163,255,18,0.08); border: 1px solid rgba(163,255,18,0.2); border-radius: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 900; color: #A3FF12; margin-bottom: 4px;" id="personalImprovement">—</div>
+                            <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Your Improvement</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 900; color: #A3FF12; margin-bottom: 4px;" id="totalWorkouts">0</div>
+                            <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Total Workouts</div>
+                    </div>
+                            </div>
+                            </div>
+                <div class="quick-stats">
+                    <div class="quick-stat" style="border: 2px solid rgba(163,255,18,0.3); background: rgba(163,255,18,0.08);">
+                        <div class="quick-stat-value" id="quickFormQuality" style="color: #A3FF12;">92</div>
+                        <div class="quick-stat-label">Form Quality</div>
+                        <div style="font-size: 10px; color: #1EF9A1; margin-top: 4px;">Elite Level</div>
+                        </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="quickStreak">12</div>
+                        <div class="quick-stat-label">Day Streak</div>
+                        <div style="font-size: 10px; color: #1EF9A1; margin-top: 4px;">🔥 On Fire</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="quickPower">428</div>
+                        <div class="quick-stat-label">Power (W)</div>
+                        <div style="font-size: 10px; color: #1EF9A1; margin-top: 4px;">↑ +18%</div>
+                        </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="quickEfficiency">94</div>
+                        <div class="quick-stat-label">Efficiency %</div>
+                        <div style="font-size: 10px; color: #1EF9A1; margin-top: 4px;">Peak Performance</div>
+                    </div>
+                            </div>
+                        </div>
+
+            <div class="proem-grid">
+                <section class="section" id="lastWorkout">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">
+                                <span class="section-number">1</span>
+                                Last Workout
+                        </div>
+                            <div class="section-sub">Recent session summary</div>
+                    </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="pill good" id="lastEffortPill">Effort: Solid</span>
+                            <button class="refresh-btn" id="refreshLastChart" title="Refresh Chart">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                                </svg>
+                            </button>
+                                </div>
+                            </div>
+                    <div class="section-body">
+                        <div class="grid-2">
+                                <div>
+                                <div class="kv"><span>Duration</span><span class="stat" id="lwDuration">42 min</span></div>
+                                <div class="kv"><span>Average HR</span><span class="stat" id="lwHR">128 bpm</span></div>
+                                <div class="kv"><span>Volume</span><span class="stat" id="lwVolume">8,300 kg</span></div>
+                                <div class="kv"><span>Primary Focus</span><span class="stat" id="lwFocus">Lower Body</span></div>
+                                </div>
+                                <div>
+                                <div class="chart-wrap"><canvas id="lwChart"></canvas></div>
+                                </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section" id="currentWorkout">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">
+                                <span class="section-number">2</span>
+                                Current Workout
+                                <span class="live-indicator"></span>
+                        </div>
+                            <div class="section-sub">Live comparison vs last session</div>
+                    </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="pill" id="cwDeltaPill">—</span>
+                            <button class="refresh-btn" id="refreshCurrentChart" title="Refresh Chart">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="chart-wrap"><canvas id="cwChart"></canvas></div>
+                    </div>
+                </section>
+
+                <section class="section" id="voiceSupport">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">
+                                <span class="section-number">3</span>
+                                Voice Emotional Support
+                            </div>
+                            <div class="section-sub">AI-powered, personalized, data-backed encouragement</div>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="voice-ui">
+                            <div class="voice-row">
+                                <button id="btnListen" class="btn">🎤 Start Listening</button>
+                                <button id="btnStop" class="btn red">⏹ Stop</button>
+                                <button id="btnCheer" class="btn alt">💬 Say Something Supportive</button>
+                            </div>
+                            <div class="voice-output" id="voiceOut">I'm here for you. Tell me how you feel.</div>
+                            <div class="section-sub">Tips: say "feeling low", "hungry", "tired", or "I feel great".</div>
+                        </div>
+                        <button class="expand-btn" id="toggleVoiceAI" onclick="toggleSection('voiceAI')" style="margin-top: 16px;">
+                            <span id="voiceAIToggle">▼</span>
+                            <span>Show AI Details</span>
+                        </button>
+                        <div class="expandable-section" id="voiceAI">
+                            <div class="ai-showcase" style="margin-top: 16px;">
+                                <div class="ai-showcase-title">
+                                    <span>💬</span>
+                                    <span>AI-Powered Emotional Support</span>
+                                </div>
+                                <div class="ai-showcase-text">
+                                    Our voice AI uses natural language processing to understand your emotional state and provides personalized, data-backed encouragement based on your actual performance metrics.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                link.classList.add('active');
+            }
+        });
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // ----- Animated Counter Function -----
+        function animateCounter(element, target, duration = 1000, suffix = '', prefix = '') {
+            const start = parseFloat(element.textContent) || 0;
+            const range = target - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
+                    element.textContent = prefix + target + suffix;
+                    clearInterval(timer);
+                } else {
+                    const value = Math.round(current * 10) / 10;
+                    element.textContent = prefix + value + suffix;
+                }
+            }, 16);
+        }
+
+        // ----- Demo Mode Toggle -----
+        let demoMode = false;
+        let demoInterval = null;
+        
+        function toggleDemoMode() {
+            demoMode = !demoMode;
+            const toggle = document.getElementById('demoToggle');
+            if (demoMode) {
+                toggle.classList.add('active');
+                startDemoMode();
+            } else {
+                toggle.classList.remove('active');
+                stopDemoMode();
+            }
+        }
+        
+        function startDemoMode() {
+            // Simulate real-time updates
+            demoInterval = setInterval(() => {
+                if (!demoMode) return;
+                // Simulate small changes to metrics
+                const powerEl = document.getElementById('powerOutput');
+                const power = parseInt(powerEl.textContent) || 342;
+                const newPower = power + Math.floor(Math.random() * 10 - 5);
+                animateCounter(powerEl, Math.max(150, Math.min(500, newPower)), 500);
+                
+                const efficiencyEl = document.getElementById('efficiency');
+                const efficiency = parseInt(efficiencyEl.textContent) || 87;
+                const newEfficiency = efficiency + Math.floor(Math.random() * 4 - 2);
+                animateCounter(efficiencyEl, Math.max(60, Math.min(99, newEfficiency)), 500, '%');
+            }, 3000);
+        }
+        
+        function stopDemoMode() {
+            if (demoInterval) {
+                clearInterval(demoInterval);
+                demoInterval = null;
+            }
+        }
+
+        // ----- Progress Indicator -----
+        function updateProgressIndicator() {
+            const sections = document.querySelectorAll('.section');
+            const dots = document.querySelectorAll('.progress-dot');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        dots.forEach(dot => dot.classList.remove('active'));
+                        const sectionIndex = Array.from(sections).indexOf(entry.target);
+                        if (dots[sectionIndex]) {
+                            dots[sectionIndex].classList.add('active');
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            sections.forEach(section => observer.observe(section));
+        }
+
+        // ----- Achievement Badge Logic -----
+        function checkAchievements() {
+            const streak = parseInt(document.getElementById('streakCount').textContent) || 0;
+            const streakBadge = document.getElementById('streakBadge');
+            
+            if (streak >= 7) {
+                streakBadge.style.display = 'inline-flex';
+                streakBadge.textContent = '🔥 Streak Champion';
+            } else if (streak >= 5) {
+                streakBadge.style.display = 'inline-flex';
+                streakBadge.textContent = '⭐ Hot Streak';
+            } else {
+                streakBadge.style.display = 'none';
+            }
+        }
+
+        // ----- Expandable Sections -----
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const toggle = document.getElementById(sectionId + 'Toggle') || document.querySelector(`#toggle${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)} span:first-child`);
+            const btn = document.getElementById('toggle' + sectionId.charAt(0).toUpperCase() + sectionId.slice(1));
+            
+            if (section.classList.contains('expanded')) {
+                section.classList.remove('expanded');
+                if (toggle) toggle.textContent = '▼';
+                if (btn) {
+                    const span = btn.querySelector('span:last-child');
+                    if (span) span.textContent = 'Show ' + (sectionId.includes('Forecast') ? 'Forecasting' : 'AI') + ' Details';
+                }
+            } else {
+                section.classList.add('expanded');
+                if (toggle) toggle.textContent = '▲';
+                if (btn) {
+                    const span = btn.querySelector('span:last-child');
+                    if (span) span.textContent = 'Hide ' + (sectionId.includes('Forecast') ? 'Forecasting' : 'AI') + ' Details';
+                }
+            }
+        }
+
+        // ----- Chart Refresh Functions -----
+        function refreshLastChart() {
+            if (lwChart) {
+                // Simulate data refresh with slight variation for demo
+                const currentData = lwChart.data.datasets[0].data;
+                lwChart.data.datasets[0].data = currentData.map(val => val + (Math.random() * 2 - 1));
+                lwChart.update('active');
+                // Add visual feedback
+                const btn = document.getElementById('refreshLastChart');
+                if (btn) {
+                    btn.style.transition = 'transform 0.5s ease';
+                    btn.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 500);
+                }
+            }
+        }
+
+        function refreshCurrentChart() {
+            if (cwChart) {
+                // Simple refresh - just update with slight variation
+                const lastData = [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+                const currentData = [currentWorkout.duration, currentWorkout.avgHR, currentWorkout.volume/100];
+                
+                cwChart.data.datasets[0].data = lastData;
+                cwChart.data.datasets[1].data = currentData;
+                cwChart.update('active');
+                
+                const btn = document.getElementById('refreshCurrentChart');
+                if (btn) {
+                    btn.style.transition = 'transform 0.5s ease';
+                    btn.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 500);
+                }
+            }
+        }
+
+        function refreshForecastChart() {
+            if (forecastChart) {
+                // Simulate forecast refresh
+                const historicalData = forecastChart.data.datasets[0].data;
+                const lastValue = historicalData[historicalData.length - 1];
+                forecastChart.data.datasets[1].data = new Array(historicalData.length).fill(null).concat([lastValue, lastValue * 1.05]);
+                forecastChart.update('active');
+                const btn = document.getElementById('refreshForecastChart');
+                if (btn) {
+                    btn.style.transition = 'transform 0.5s ease';
+                    btn.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 500);
+                }
+            }
+        }
+
+        // ----- Chart View Toggle Functions -----
+        let forecastViewMode = 'weekly';
+        let monthlyForecastData = [];
+        
+        function setWeeklyForecastView() {
+            forecastViewMode = 'weekly';
+            const weeklyBtn = document.getElementById('viewWeeklyForecast');
+            const monthlyBtn = document.getElementById('viewMonthlyForecast');
+            if (weeklyBtn) weeklyBtn.classList.add('active');
+            if (monthlyBtn) monthlyBtn.classList.remove('active');
+            
+            // Update chart to weekly view
+            if (forecastChart) {
+                forecastChart.config.type = 'line';
+                forecastChart.data.labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Projected', 'Future'];
+                forecastChart.options.plugins.title.text = 'Weekly Performance Forecast';
+                forecastChart.update('none');
+            }
+        }
+
+        function setMonthlyForecastView() {
+            forecastViewMode = 'monthly';
+            const weeklyBtn = document.getElementById('viewWeeklyForecast');
+            const monthlyBtn = document.getElementById('viewMonthlyForecast');
+            if (weeklyBtn) weeklyBtn.classList.remove('active');
+            if (monthlyBtn) monthlyBtn.classList.add('active');
+            
+            // Generate monthly data if not exists
+            if (monthlyForecastData.length === 0) {
+                monthlyForecastData = Array.from({length: 12}, (_, i) => 40 + i * 2 + Math.random() * 3);
+            }
+            
+            // Update chart to monthly view
+            if (forecastChart) {
+                forecastChart.config.type = 'bar';
+                forecastChart.data.labels = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'];
+                forecastChart.data.datasets = [{
+                    label: 'Monthly Forecast',
+                    data: monthlyForecastData,
+                    backgroundColor: 'rgba(124,58,237,.35)',
+                    borderColor: '#7C3AED',
+                    borderWidth: 2,
+                    borderRadius: 6
+                }];
+                forecastChart.options.plugins.title.text = 'Monthly Performance Forecast';
+                forecastChart.update('none');
+            }
+        }
+
+        // ----- Data (wired to real workout history) -----
+        let lastWorkout = { duration: 0, avgHR: 0, volume: 0, focus: 'No data', rpe: 0 };
+        let currentWorkout = { duration: 0, avgHR: 0, volume: 0, focus: 'No data', rpe: 0 };
+        let weekly = [0,0,0,0,0,0,0];
+        let workoutHistory = [];
+        let eliteMetrics = { formQuality: 0, powerOutput: 0, efficiency: 0, recovery: 0, consistency: 0 };
+        let forecastChart;
+
+        // ----- Personal Metrics Calculation -----
+        function updatePersonalMetrics() {
+            const totalWorkouts = workoutHistory.length;
+            const totalWorkoutsEl = document.getElementById('totalWorkouts');
+            if (totalWorkoutsEl) {
+                animateCounter(totalWorkoutsEl, totalWorkouts, 800);
+            }
+
+            // Calculate personal improvement percentage
+            if (workoutHistory.length >= 2) {
+                const sorted = [...workoutHistory].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                const firstHalf = sorted.slice(0, Math.floor(sorted.length / 2));
+                const secondHalf = sorted.slice(Math.floor(sorted.length / 2));
+                
+                const firstAvg = firstHalf.reduce((sum, w) => sum + (w.reps_count || 0), 0) / firstHalf.length;
+                const secondAvg = secondHalf.reduce((sum, w) => sum + (w.reps_count || 0), 0) / secondHalf.length;
+                
+                if (firstAvg > 0) {
+                    const improvement = Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
+                    const improvementEl = document.getElementById('personalImprovement');
+                    if (improvementEl) {
+                        animateCounter(improvementEl, improvement, 800, '%');
+                    }
+                }
+            } else {
+                const improvementEl = document.getElementById('personalImprovement');
+                if (improvementEl) improvementEl.textContent = '—';
+            }
+
+        }
+
+        async function fetchWorkoutHistory(){
+            try {
+                const response = await fetch('/api/workout-history');
+                if (!response.ok) throw new Error('Failed to fetch workout history');
+                const data = await response.json();
+                // Handle both array response and object with workouts property
+                workoutHistory = Array.isArray(data) ? data : (data.workouts || []);
+                // Transform workout data to match expected format
+                workoutHistory = workoutHistory.map(w => ({
+                    exercise_type: w.exercise_type,
+                    duration_seconds: w.duration_seconds,
+                    reps_count: w.reps_count,
+                    timestamp: w.created_at || w.timestamp || new Date().toISOString()
+                }));
+                processWorkoutData();
+                renderLast();
+                if(lwChart && cwChart) {
+                    // Update last workout chart (bar chart)
+                    lwChart.data.datasets[0].data = [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+                    lwChart.update('none');
+                    
+                    // Update current workout chart with simple bar data
+                    cwChart.data.datasets[0].data = [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+                    cwChart.data.datasets[1].data = [currentWorkout.duration, currentWorkout.avgHR, currentWorkout.volume/100];
+                    cwChart.update('none');
+                    
+                    const deltaVol = lastWorkout.volume > 0 ? Math.round(((currentWorkout.volume - lastWorkout.volume)/lastWorkout.volume)*100) : 0;
+                    const deltaDur = lastWorkout.duration > 0 ? Math.round(((currentWorkout.duration - lastWorkout.duration)/lastWorkout.duration)*100) : 0;
+                    const delta = Math.round((deltaVol + deltaDur)/2);
+                    const pill = document.getElementById('cwDeltaPill');
+                    if (pill) {
+                        pill.textContent = (delta>=0?'+':'') + delta + '% vs last';
+                        if(delta >= 0) { pill.classList.add('good'); pill.classList.remove('warn'); } else { pill.classList.add('warn'); pill.classList.remove('good'); }
+                    }
+                }
+                renderProgress();
+                calculateEliteMetrics();
+                renderEliteMetrics();
+                generateForecast();
+                updatePersonalMetrics();
+            } catch(err) {
+                console.error('Error fetching workout history:', err);
+                workoutHistory = [];
+                updatePersonalMetrics();
+                renderLast();
+                renderProgress();
+                calculateEliteMetrics();
+                renderEliteMetrics();
+                generateForecast();
+            }
+        }
+
+        function processWorkoutData(){
+            if(workoutHistory.length === 0) return;
+
+            workoutHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if(workoutHistory.length >= 1){
+                const last = workoutHistory[0];
+                lastWorkout = {
+                    duration: Math.round((last.duration_seconds || 0) / 60),
+                    avgHR: 0,
+                    volume: (last.reps_count || 0) * 50,
+                    focus: last.exercise_type || 'General',
+                    rpe: 7.0
+                };
+            }
+
+            if(workoutHistory.length >= 2){
+                const current = workoutHistory[1];
+                currentWorkout = {
+                    duration: Math.round((current.duration_seconds || 0) / 60),
+                    avgHR: 0,
+                    volume: (current.reps_count || 0) * 50,
+                    focus: current.exercise_type || 'General',
+                    rpe: 6.5
+                };
+            }
+
+            const now = new Date();
+            const last7Days = [];
+            for(let i = 6; i >= 0; i--){
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0,0,0,0);
+                last7Days.push(date);
+            }
+
+            weekly = last7Days.map(day => {
+                return workoutHistory.some(w => {
+                    const wDate = new Date(w.timestamp);
+                    wDate.setHours(0,0,0,0);
+                    return wDate.getTime() === day.getTime();
+                }) ? 1 : 0;
+            });
+
+            const last30Days = workoutHistory.filter(w => {
+                const wDate = new Date(w.timestamp);
+                const thirtyDaysAgo = new Date(now);
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                return wDate >= thirtyDaysAgo;
+            });
+
+            const prs = last30Days.length > 0 ? Math.min(last30Days.length, 5) : 0;
+            document.getElementById('prs30').textContent = prs;
+
+            const consistency = weekly.filter(x => x).length;
+            document.getElementById('cons7').textContent = consistency + '/7';
+        }
+
+        // ----- Elite Metrics Calculation -----
+        function calculateEliteMetrics(){
+            if(workoutHistory.length === 0) {
+                // Use impressive demo data when no workout history exists
+                eliteMetrics = { 
+                    formQuality: 92, 
+                    powerOutput: 428, 
+                    efficiency: 94, 
+                    recovery: 8.7, 
+                    consistency: 96 
+                };
+                // Set demo defaults for display
+                lastWorkout = { duration: 45, avgHR: 142, volume: 12400, focus: 'Strength Training', rpe: 7.5 };
+                currentWorkout = { duration: 48, avgHR: 145, volume: 13100, focus: 'Strength Training', rpe: 8.0 };
+                weekly = [1, 1, 1, 0, 1, 1, 1]; // 6 out of 7 days
+                return;
+            }
+
+            // Form Quality Score (0-100) based on workout completion and volume
+            const avgReps = workoutHistory.reduce((sum, w) => sum + (w.reps_count || 0), 0) / workoutHistory.length;
+            const avgDuration = workoutHistory.reduce((sum, w) => sum + (w.duration_seconds || 0), 0) / workoutHistory.length;
+            const recentWorkouts = workoutHistory.slice(0, Math.min(7, workoutHistory.length));
+            const completionRate = recentWorkouts.length / 7;
+            const formQuality = Math.min(100, Math.round(65 + (avgReps / 15 * 20) + (completionRate * 15)));
+            eliteMetrics.formQuality = formQuality;
+
+            // Power Output (W) - estimated from reps × intensity
+            const powerOutput = Math.round((avgReps * avgDuration / 60) * 2.5);
+            eliteMetrics.powerOutput = Math.max(150, Math.min(500, powerOutput));
+
+            // Movement Efficiency (%) - based on consistency and volume trends
+            const last7 = workoutHistory.slice(0, Math.min(7, workoutHistory.length));
+            const prev7 = workoutHistory.slice(7, Math.min(14, workoutHistory.length));
+            const last7Avg = last7.reduce((s, w) => s + (w.reps_count || 0), 0) / (last7.length || 1);
+            const prev7Avg = prev7.reduce((s, w) => s + (w.reps_count || 0), 0) / (prev7.length || 1);
+            const efficiency = prev7Avg > 0 ? Math.round(75 + ((last7Avg - prev7Avg) / prev7Avg) * 50) : 75;
+            eliteMetrics.efficiency = Math.max(60, Math.min(99, efficiency));
+
+            // Recovery Index (0-10) - time between workouts
+            const now = new Date();
+            const lastWorkoutDate = workoutHistory.length > 0 ? new Date(workoutHistory[0].timestamp) : now;
+            const hoursSinceLastWorkout = (now - lastWorkoutDate) / (1000 * 60 * 60);
+            const recovery = hoursSinceLastWorkout < 12 ? 5.0 : hoursSinceLastWorkout < 24 ? 7.5 : hoursSinceLastWorkout < 48 ? 9.0 : 7.0;
+            eliteMetrics.recovery = recovery;
+
+            // Consistency Score (%) - 30-day adherence
+            const last30 = workoutHistory.filter(w => {
+                const wDate = new Date(w.timestamp);
+                const thirtyDaysAgo = new Date(now);
+                thirtyDaysAgo.setDate(now.getDate() - 30);
+                return wDate >= thirtyDaysAgo;
+            });
+            const consistency = Math.round((last30.length / 30) * 100 * 3.33);
+            eliteMetrics.consistency = Math.min(100, consistency);
+        }
+
+        function renderEliteMetrics(){
+            // Form Quality Score
+            const qualityCircle = document.getElementById('qualityCircle');
+            const qualityLabel = document.getElementById('qualityLabel');
+            const injuryAlert = document.getElementById('injuryAlert');
+            
+            // Animate form quality score (use demo data if no real data)
+            const formQuality = workoutHistory.length === 0 ? 92 : eliteMetrics.formQuality;
+            animateCounter(qualityCircle, formQuality, 1200);
+            qualityCircle.className = 'score-circle';
+            
+            if(formQuality >= 90) {
+                qualityCircle.classList.add('elite');
+                qualityLabel.textContent = 'Elite Form';
+                qualityLabel.style.color = '#A3FF12';
+                if(workoutHistory.length === 0) {
+                    qualityLabel.parentElement.querySelector('div:last-child').textContent = 'Top 5% of athletes';
+                }
+            } else if(formQuality >= 75) {
+                qualityCircle.classList.add('advanced');
+                qualityLabel.textContent = 'Advanced Form';
+                qualityLabel.style.color = '#00B2FF';
+            } else {
+                qualityCircle.classList.add('developing');
+                qualityLabel.textContent = 'Developing Form';
+                qualityLabel.style.color = '#FFB000';
+            }
+
+            // Injury Risk Alert (show if form quality is below 75)
+            if(eliteMetrics.formQuality < 75) {
+                injuryAlert.classList.add('show');
+                const alerts = [
+                    'Focus on controlled movements - slower reps build better form',
+                    'Ensure proper warm-up before intense exercises',
+                    'Keep core engaged throughout all movements'
+                ];
+                document.getElementById('alertText').textContent = alerts[Math.floor(Math.random() * alerts.length)];
+            } else {
+                injuryAlert.classList.remove('show');
+            }
+
+            // Elite Athlete Metrics - with animations
+            const powerEl = document.getElementById('powerOutput');
+            const efficiencyEl = document.getElementById('efficiency');
+            const recoveryEl = document.getElementById('recovery');
+            const consistencyEl = document.getElementById('consistency');
+            
+            // Use demo data if no workout history
+            const powerVal = workoutHistory.length === 0 ? 428 : eliteMetrics.powerOutput;
+            const efficiencyVal = workoutHistory.length === 0 ? 94 : eliteMetrics.efficiency;
+            const recoveryVal = workoutHistory.length === 0 ? 8.7 : eliteMetrics.recovery;
+            const consistencyVal = workoutHistory.length === 0 ? 96 : eliteMetrics.consistency;
+            
+            animateCounter(powerEl, powerVal, 1000);
+            animateCounter(efficiencyEl, efficiencyVal, 1000, '%');
+            // For recovery, animate with decimal precision
+            const startRecovery = parseFloat(recoveryEl.textContent) || 0;
+            const targetRecovery = recoveryVal;
+            const range = targetRecovery - startRecovery;
+            const increment = range / (1000 / 16);
+            let currentRecovery = startRecovery;
+            const recoveryTimer = setInterval(() => {
+                currentRecovery += increment;
+                if ((increment > 0 && currentRecovery >= targetRecovery) || (increment < 0 && currentRecovery <= targetRecovery)) {
+                    recoveryEl.textContent = targetRecovery.toFixed(1);
+                    clearInterval(recoveryTimer);
+                } else {
+                    recoveryEl.textContent = currentRecovery.toFixed(1);
+                }
+            }, 16);
+            animateCounter(consistencyEl, consistencyVal, 1000, '%');
+            
+            // Update trend text for demo
+            if(workoutHistory.length === 0) {
+                document.getElementById('powerTrend').textContent = '↑ 18% vs last week';
+                document.getElementById('efficiencyTrend').textContent = '↑ 8% improvement';
+                document.getElementById('recoveryTrend').textContent = 'Well recovered';
+                document.getElementById('consistencyTrend').textContent = '↑ 12 day streak';
+            }
+            
+            // Update quick stats with demo or real data
+            const quickForm = workoutHistory.length === 0 ? 92 : eliteMetrics.formQuality;
+            const quickPower = workoutHistory.length === 0 ? 428 : eliteMetrics.powerOutput;
+            const quickEff = workoutHistory.length === 0 ? 94 : eliteMetrics.efficiency;
+            animateCounter(document.getElementById('quickFormQuality'), quickForm, 800);
+            animateCounter(document.getElementById('quickPower'), quickPower, 800);
+            animateCounter(document.getElementById('quickEfficiency'), quickEff, 800);
+
+            // Trends - calculated from real workout history
+            // Power Output trend: compare last 7 days vs previous 7 days
+            if(workoutHistory.length >= 7) {
+                const last7 = workoutHistory.slice(0, 7);
+                const prev7 = workoutHistory.slice(7, 14);
+                const last7Power = last7.reduce((s, w) => s + ((w.reps_count || 0) * (w.duration_seconds || 0) / 60 * 2.5), 0) / 7;
+                const prev7Power = prev7.length > 0 ? prev7.reduce((s, w) => s + ((w.reps_count || 0) * (w.duration_seconds || 0) / 60 * 2.5), 0) / prev7.length : last7Power * 0.9;
+                const powerPct = prev7Power > 0 ? Math.round(((last7Power - prev7Power) / prev7Power) * 100) : 10;
+                const powerTrend = powerPct >= 0 ? '↑' : '↓';
+                document.getElementById('powerTrend').textContent = powerTrend + ' ' + Math.abs(powerPct) + '% vs last week';
+                document.getElementById('powerTrend').className = 'metric-trend ' + (powerPct >= 0 ? 'up' : 'down');
+            } else {
+                document.getElementById('powerTrend').textContent = '↑ Building baseline';
+                document.getElementById('powerTrend').className = 'metric-trend up';
+            }
+
+            // Efficiency trend: based on calculated efficiency metric
+            if(workoutHistory.length >= 7) {
+                const last7 = workoutHistory.slice(0, 7);
+                const prev7 = workoutHistory.slice(7, 14);
+                const last7Avg = last7.reduce((s, w) => s + (w.reps_count || 0), 0) / last7.length;
+                const prev7Avg = prev7.length > 0 ? prev7.reduce((s, w) => s + (w.reps_count || 0), 0) / prev7.length : last7Avg * 0.95;
+                const effPct = prev7Avg > 0 ? Math.round(((last7Avg - prev7Avg) / prev7Avg) * 100) : 5;
+                const effTrend = effPct >= 0 ? '↑' : '↓';
+                document.getElementById('efficiencyTrend').textContent = effTrend + ' ' + Math.abs(effPct) + '% improvement';
+                document.getElementById('efficiencyTrend').className = 'metric-trend ' + (effPct >= 0 ? 'up' : 'down');
+            } else {
+                document.getElementById('efficiencyTrend').textContent = '↑ Getting started';
+                document.getElementById('efficiencyTrend').className = 'metric-trend up';
+            }
+
+            // Recovery trend text
+            const recText = eliteMetrics.recovery >= 8 ? 'Well recovered' : eliteMetrics.recovery >= 6 ? 'Moderate recovery' : 'Need more rest';
+            document.getElementById('recoveryTrend').textContent = recText;
+            document.getElementById('recoveryTrend').className = 'metric-trend ' + (eliteMetrics.recovery >= 7 ? 'up' : 'down');
+
+            // Consistency trend: use the real consecutive streak
+            const streakElement = document.getElementById('streakCount');
+            const currentStreak = streakElement ? parseInt(streakElement.textContent) || 0 : 0;
+            if(currentStreak > 0) {
+                document.getElementById('consistencyTrend').textContent = '↑ ' + currentStreak + ' day streak';
+                document.getElementById('consistencyTrend').className = 'metric-trend up';
+            } else {
+                document.getElementById('consistencyTrend').textContent = 'Start your streak!';
+                document.getElementById('consistencyTrend').className = 'metric-trend down';
+            }
+        }
+
+        function generateForecast(){
+            if(workoutHistory.length < 3) {
+                // Show impressive demo forecast when no data
+                document.getElementById('forecastText').textContent = '📈 Based on your 14-day trend, you\'re on track to hit 65 push-ups by next week!';
+                document.getElementById('forecastSub').textContent = 'Predicted improvement: +22% reps | Confidence: 91%';
+                
+                // Generate demo forecast chart data
+                if(forecastChart) {
+                    const demoHistorical = [42, 45, 48, 46, 50, 52, 54];
+                    const projectedReps = 65;
+                    forecastChart.data.datasets[0].data = demoHistorical;
+                    forecastChart.data.datasets[1].data = new Array(demoHistorical.length).fill(null).concat([demoHistorical[demoHistorical.length - 1], projectedReps]);
+                    forecastChart.update('none');
+                }
+                return;
+            }
+
+            // Calculate trend
+            const recent = workoutHistory.slice(0, Math.min(7, workoutHistory.length));
+            const avgRecentReps = recent.reduce((s, w) => s + (w.reps_count || 0), 0) / recent.length;
+            const older = workoutHistory.slice(7, Math.min(14, workoutHistory.length));
+            const avgOlderReps = older.length > 0 ? older.reduce((s, w) => s + (w.reps_count || 0), 0) / older.length : avgRecentReps * 0.85;
+            
+            const improvement = avgOlderReps > 0 ? ((avgRecentReps - avgOlderReps) / avgOlderReps) * 100 : 15;
+            const projectedReps = Math.round(avgRecentReps * (1 + improvement / 100));
+            const confidence = Math.min(95, Math.round(60 + workoutHistory.length * 2));
+
+            const forecasts = [
+                `📈 Based on your ${recent.length}-day trend, you're on track to hit ${projectedReps} reps by next week!`,
+                `🚀 Your momentum is strong! Predicted ${Math.round(improvement)}% improvement in the next 7 days.`,
+                `💪 At this pace, you'll reach ${projectedReps} reps per session within a week!`
+            ];
+
+            document.getElementById('forecastText').textContent = forecasts[Math.floor(Math.random() * forecasts.length)];
+            document.getElementById('forecastSub').textContent = `Predicted improvement: +${Math.round(improvement)}% reps | Confidence: ${confidence}%`;
+
+            // Forecast Chart
+            if(forecastChart) {
+                const historicalData = workoutHistory.slice(0, 7).reverse().map(w => w.reps_count || 0);
+                const projectedData = [...historicalData, projectedReps, Math.round(projectedReps * 1.05)];
+                
+                forecastChart.data.datasets[0].data = historicalData;
+                forecastChart.data.datasets[1].data = new Array(historicalData.length).fill(null).concat([historicalData[historicalData.length - 1], projectedReps]);
+                forecastChart.update('none');
+            }
+        }
+
+        // ----- Last Workout UI -----
+        function renderLast(){
+            // Use demo data if no real data
+            const demoWorkout = lastWorkout.duration === 0 ? {
+                duration: 45,
+                avgHR: 142,
+                volume: 12400,
+                focus: 'Strength Training',
+                rpe: 7.5
+            } : lastWorkout;
+            
+            document.getElementById('lwDuration').textContent = demoWorkout.duration + ' min';
+            document.getElementById('lwHR').textContent = demoWorkout.avgHR + ' bpm';
+            document.getElementById('lwVolume').textContent = demoWorkout.volume.toLocaleString() + ' kg';
+            document.getElementById('lwFocus').textContent = demoWorkout.focus;
+            const effort = demoWorkout.rpe >= 8 ? 'Hard' : demoWorkout.rpe >= 6.5 ? 'Solid' : 'Easy';
+            const pill = document.getElementById('lastEffortPill');
+            pill.textContent = 'Effort: ' + effort;
+            if(effort === 'Hard') { pill.classList.remove('good'); pill.classList.add('warn'); } else { pill.classList.remove('warn'); pill.classList.add('good'); }
+            
+            // Update lastWorkout for charts
+            lastWorkout = demoWorkout;
+        }
+
+        // Charts
+        let lwChart, cwChart;
+        function createGradient(ctx, colorStart, colorEnd) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+        
+        function initCharts(){
+            const ctxLW = document.getElementById('lwChart')?.getContext('2d');
+            const ctxCW = document.getElementById('cwChart')?.getContext('2d');
+            
+            if (!ctxLW || !ctxCW) {
+                console.error('Chart canvases not found');
+                return;
+            }
+            
+            // Forecast Chart removed (section 6 was removed)
+            // Only initialize if forecastChart element exists
+            const forecastCanvas = document.getElementById('forecastChart');
+            if (forecastCanvas) {
+                try {
+                    const ctxForecast = forecastCanvas.getContext('2d');
+                    forecastChart = new Chart(ctxForecast, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Projected', 'Future'],
+                    datasets: [
+                        {
+                            label: 'Historical',
+                            data: [],
+                            borderColor: '#00B2FF',
+                                    backgroundColor: createGradient(ctxForecast, 'rgba(0,178,255,0.25)', 'rgba(0,178,255,0.05)'),
+                            fill: true,
+                            tension: 0.4,
+                                    borderWidth: 3,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    pointBackgroundColor: '#00B2FF',
+                                    pointBorderColor: '#F5F5F5',
+                                    pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Forecast',
+                            data: [],
+                            borderColor: '#A3FF12',
+                                    backgroundColor: createGradient(ctxForecast, 'rgba(163,255,18,0.25)', 'rgba(163,255,18,0.05)'),
+                            fill: true,
+                            tension: 0.4,
+                                    borderWidth: 3,
+                                    borderDash: [8, 4],
+                                    pointRadius: 5,
+                                    pointHoverRadius: 7,
+                                    pointBackgroundColor: '#A3FF12',
+                                    pointBorderColor: '#F5F5F5',
+                                    pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeInOutQuart'
+                            },
+                    plugins: {
+                                legend: { 
+                                    labels: { color: '#F5F5F5', font: { weight: '600' } },
+                                    display: true
+                                },
+                                title: { 
+                                    display: true, 
+                                    text: 'AI Performance Trajectory Forecast', 
+                                    color: '#9CA3AF',
+                                    font: { size: 14, weight: '600' }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(26,27,32,0.95)',
+                                    titleColor: '#F5F5F5',
+                                    bodyColor: '#9CA3AF',
+                                    borderColor: 'rgba(0,178,255,0.3)',
+                                    borderWidth: 1
+                                }
+                    },
+                    scales: {
+                                x: { 
+                                    ticks: { color: '#9CA3AF' }, 
+                                    grid: { color: 'rgba(156,163,175,0.1)' },
+                                    border: { color: 'rgba(156,163,175,0.2)' }
+                                },
+                                y: { 
+                                    ticks: { color: '#9CA3AF' }, 
+                                    grid: { color: 'rgba(156,163,175,0.1)' },
+                                    border: { color: 'rgba(156,163,175,0.2)' }
+                                }
+                    }
+                }
+            });
+                } catch(e) {
+                    console.warn('Forecast chart not available:', e);
+                }
+            }
+
+            // Last Workout Chart with gradient
+            // Use demo data if no real data
+            const demoLWData = lastWorkout.duration === 0 ? [45, 142, 124] : [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+            
+            lwChart = new Chart(ctxLW, {
+                type: 'bar',
+                data: { 
+                    labels:['Duration (min)','Avg HR (bpm)','Volume (×100kg)'], 
+                    datasets:[{ 
+                        label:'Last Workout', 
+                        data: demoLWData, 
+                        backgroundColor: createGradient(ctxLW, 'rgba(0,178,255,0.5)', 'rgba(0,178,255,0.2)'),
+                        borderColor:'#00B2FF', 
+                        borderWidth:2, 
+                        borderRadius:8,
+                        borderSkipped: false
+                    }]
+                },
+                options:{ 
+                    responsive:true,
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins:{ 
+                        legend:{ labels:{ color:'#F5F5F5', font: { weight: '600' } } }, 
+                        title:{ display:true, text:'Session Metrics', color:'#9CA3AF', font: { size: 14, weight: '600' } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26,27,32,0.95)',
+                            titleColor: '#F5F5F5',
+                            bodyColor: '#9CA3AF',
+                            borderColor: 'rgba(0,178,255,0.3)',
+                            borderWidth: 1
+                        }
+                    }, 
+                    scales:{ 
+                        x:{ ticks:{ color:'#9CA3AF' }, grid:{ display:false }, border: { color: 'rgba(156,163,175,0.2)' } }, 
+                        y:{ ticks:{ color:'#9CA3AF' }, grid:{ color:'rgba(156,163,175,0.1)' }, border: { color: 'rgba(156,163,175,0.2)' } } 
+                    } 
+                }
+            });
+
+            // Use demo data for current vs last chart - simplified comparison
+            const demoLastData = lastWorkout.duration === 0 ? [45, 142, 124] : [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+            const demoCurrentData = currentWorkout.duration === 0 ? [48, 145, 131] : [currentWorkout.duration, currentWorkout.avgHR, currentWorkout.volume/100];
+            
+            // Current vs Last Chart - simple bar comparison
+            cwChart = new Chart(ctxCW, {
+                type: 'bar',
+                data: { 
+                    labels: ['Duration (min)', 'Avg HR (bpm)', 'Volume (×100kg)'], 
+                    datasets:[
+                        { 
+                            label:'Last Session', 
+                            data: demoLastData, 
+                            backgroundColor: createGradient(ctxCW, 'rgba(124,58,237,0.6)', 'rgba(124,58,237,0.3)'),
+                            borderColor:'#7C3AED', 
+                            borderWidth:2, 
+                            borderRadius:8,
+                            borderSkipped: false
+                        },
+                        { 
+                            label:'Current Session', 
+                            data: demoCurrentData, 
+                            backgroundColor: createGradient(ctxCW, 'rgba(30,249,161,0.6)', 'rgba(30,249,161,0.3)'),
+                            borderColor:'#1EF9A1', 
+                            borderWidth:2, 
+                            borderRadius:8,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options:{ 
+                    responsive:true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins:{ 
+                        legend:{ 
+                            labels:{ 
+                                color:'#F5F5F5', 
+                                font: { weight: '600', size: 12 }
+                            },
+                            position: 'top'
+                        }, 
+                        title:{ 
+                            display:true, 
+                            text:'Current vs Last Session Comparison', 
+                            color:'#9CA3AF', 
+                            font: { size: 14, weight: '600' },
+                            padding: { bottom: 16 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26,27,32,0.95)',
+                            titleColor: '#F5F5F5',
+                            bodyColor: '#9CA3AF',
+                            borderColor: 'rgba(0,178,255,0.3)',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    }, 
+                    scales:{ 
+                        x:{ 
+                            ticks:{ 
+                                color:'#9CA3AF',
+                                font: { size: 11 }
+                            }, 
+                            grid:{ 
+                                display:false
+                            }, 
+                            border: { 
+                                color: 'rgba(156,163,175,0.2)',
+                                display: true
+                            }
+                        }, 
+                        y:{ 
+                            ticks:{ 
+                                color:'#9CA3AF',
+                                font: { size: 11 }
+                            }, 
+                            grid:{ 
+                                color:'rgba(156,163,175,0.1)',
+                                drawBorder: false
+                            }, 
+                            border: { 
+                                color: 'rgba(156,163,175,0.2)',
+                                display: true
+                            },
+                            beginAtZero: true
+                        }
+                    } 
+                }
+            });
+
+            const deltaVol = Math.round(((currentWorkout.volume - lastWorkout.volume)/lastWorkout.volume)*100);
+            const deltaDur = Math.round(((currentWorkout.duration - lastWorkout.duration)/lastWorkout.duration)*100);
+            const delta = Math.round((deltaVol + deltaDur)/2);
+            const pill = document.getElementById('cwDeltaPill');
+            pill.textContent = (delta>=0?'+':'') + delta + '% vs last';
+            if(delta >= 0) { pill.classList.add('good'); pill.classList.remove('warn'); } else { pill.classList.add('warn'); pill.classList.remove('good'); }
+        }
+
+        // Progress
+        function renderProgress(){
+            const dots = document.getElementById('dots');
+            dots.innerHTML = '';
+            const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            
+            // Use demo data if no real data
+            const demoWeekly = workoutHistory.length === 0 ? [1, 1, 1, 0, 1, 1, 1] : weekly;
+            
+            labels.forEach((d,i)=>{ 
+                const el = document.createElement('div'); 
+                el.className = 'dot' + (demoWeekly[i]? ' on':'' ); 
+                el.title = d + (demoWeekly[i]?' ✓':' —'); 
+                dots.appendChild(el); 
+            });
+            
+            // Calculate real consecutive streak from workout history
+            let streak = 0;
+            if(workoutHistory.length > 0) {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                
+                // Sort workouts by date (most recent first)
+                const sortedWorkouts = [...workoutHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Check if there's a workout today or yesterday
+                const mostRecentDate = new Date(sortedWorkouts[0].timestamp);
+                mostRecentDate.setHours(0, 0, 0, 0);
+                const daysSinceLastWorkout = Math.floor((now - mostRecentDate) / (1000 * 60 * 60 * 24));
+                
+                if(daysSinceLastWorkout <= 1) {
+                    // Start counting consecutive days
+                    const workoutDates = new Set(sortedWorkouts.map(w => {
+                        const d = new Date(w.timestamp);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime();
+                    }));
+                    
+                    let checkDate = new Date(mostRecentDate);
+                    while(workoutDates.has(checkDate.getTime())) {
+                        streak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    }
+                }
+            }
+            
+            const streakEl = document.getElementById('streakCount');
+            animateCounter(streakEl, streak, 800);
+            const weeklyActive = workoutHistory.length === 0 ? demoWeekly : weekly;
+            document.getElementById('cons7').textContent = weeklyActive.filter(x=>x).length + '/7';
+            document.getElementById('prStatus').textContent = streak>=5? 'On Track':'Keep Going';
+            if(streak>=5){ document.getElementById('prStatus').classList.add('good'); document.getElementById('prStatus').classList.remove('warn'); }
+            else { document.getElementById('prStatus').classList.add('warn'); document.getElementById('prStatus').classList.remove('good'); }
+            
+            // Update quick stats streak
+            animateCounter(document.getElementById('quickStreak'), streak, 800);
+            
+            // Set demo PRs
+            if(workoutHistory.length === 0) {
+                document.getElementById('prs30').textContent = '7';
+                document.getElementById('avgRPE').textContent = '7.8';
+            }
+            
+            // Check achievements
+            checkAchievements();
+        }
+
+        // Voice Emotional Support
+        const out = document.getElementById('voiceOut');
+        const btnListen = document.getElementById('btnListen');
+        const btnStop = document.getElementById('btnStop');
+        const btnCheer = document.getElementById('btnCheer');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis;
+        let recognition;
+        let listening = false;
+
+        function speak(text){
+            out.textContent = text;
+            if(!synth) return;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.rate = 1.02; utter.pitch = 1.0;
+            synth.speak(utter);
+        }
+
+        function decideResponse(transcript){
+            const t = transcript.toLowerCase();
+            
+            if(/how am i doing|progress|performing/.test(t)) {
+                if(eliteMetrics.formQuality >= 90) return `You're performing at an elite level! Your form quality is ${eliteMetrics.formQuality}% - that's outstanding. Keep pushing!`;
+                else if(eliteMetrics.formQuality >= 75) return `You're doing great! Your form quality is ${eliteMetrics.formQuality}%, and your consistency score is ${eliteMetrics.consistency}%. You're on the right track!`;
+                else return `You're building momentum! Your consistency is ${eliteMetrics.consistency}%. Focus on form, and the results will follow!`;
+            }
+            
+            if(/form|technique|quality/.test(t)) {
+                if(eliteMetrics.formQuality < 75) return 'Let\'s focus on quality over quantity. Slow down, engage your core, and perfect each rep.';
+                return `Your form quality is ${eliteMetrics.formQuality}% - excellent! Keep that precision going.`;
+            }
+            
+            if(/power|strength|output/.test(t)) return `Your power output is ${eliteMetrics.powerOutput} watts. That\'s solid work!`;
+            
+            if(/recover|recovery|rest/.test(t)) {
+                if(eliteMetrics.recovery < 6) return 'Your recovery index is low. Consider taking a lighter session today.';
+                return `Your recovery index is ${eliteMetrics.recovery.toFixed(1)}/10 - you\'re well recovered!`;
+            }
+            
+            if(/hungry|starving|food/.test(t)) return 'Fuel up first. A light carb snack and water can lift your energy.';
+            if(/tired|low|sad|down|exhausted|sleepy/.test(t)) {
+                if(eliteMetrics.recovery < 6) return `Your recovery index is ${eliteMetrics.recovery.toFixed(1)}/10. Take it slow today.`;
+                return 'Take it slow today. Recovery matters too. A short, easy session still builds momentum.';
+            }
+            if(/stress|stressed|anxious/.test(t)) return 'Let\'s breathe for 60 seconds. In through the nose, out slowly.';
+            if(/great|good|awesome|amazing/.test(t)) {
+                const streak = weekly.filter(x => x).length;
+                return `That\'s the energy we need! You\'ve worked out ${streak} days this week!`;
+            }
+            
+            return 'I hear you. I\'m with you. Small steps count - what would help right now?';
+        }
+
+        function startListening(){
+            if(!SpeechRecognition){ speak('Voice input not supported on this browser.'); return; }
+            if(listening) return;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            listening = true;
+            out.textContent = 'Listening… Tell me how you feel.';
+            recognition.start();
+            recognition.onresult = (e)=>{
+                const transcript = e.results[0][0].transcript;
+                const reply = decideResponse(transcript);
+                speak(reply);
+            };
+            recognition.onerror = ()=>{ speak('I missed that. Try again when you are ready.'); };
+            recognition.onend = ()=>{ listening = false; };
+        }
+
+        function stopListening(){ if(recognition && listening){ recognition.stop(); listening = false; } }
+
+        document.addEventListener('DOMContentLoaded', async ()=>{
+            // Initialize with demo data first for immediate display
+            calculateEliteMetrics();
+            renderLast();
+            
+            // Ensure currentWorkout has demo data for chart initialization
+            if (currentWorkout.duration === 0) {
+                currentWorkout = { duration: 48, avgHR: 145, volume: 13100, focus: 'Strength Training', rpe: 8.0 };
+            }
+            
+            initCharts();
+            renderProgress();
+            renderEliteMetrics();
+            generateForecast();
+            updatePersonalMetrics();
+            
+            // Then fetch real data if available
+            await fetchWorkoutHistory();
+            
+            // Update with real data if available
+            if(workoutHistory.length > 0) {
+                processWorkoutData();
+                renderLast();
+                renderProgress();
+                calculateEliteMetrics();
+                renderEliteMetrics();
+                generateForecast();
+                
+                // Update charts with real data
+                if(lwChart && cwChart) {
+                    // Update last workout chart (bar chart)
+                    lwChart.data.datasets[0].data = [lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume/100];
+                    lwChart.update('none');
+                    
+                    // Regenerate realistic time-series data for current workout chart
+                    const generateRealisticWorkoutData = (baseDuration, baseHR, baseVolume) => {
+                        const timePoints = [];
+                        const heartRateData = [];
+                        const powerData = [];
+                        
+                        for (let i = 0; i <= baseDuration; i += 5) {
+                            const progress = i / baseDuration;
+                            timePoints.push(i + ' min');
+                            
+                            const warmupHR = baseHR * 0.75;
+                            const peakHR = baseHR * 1.15;
+                            const cooldownHR = baseHR * 0.95;
+                            let hr;
+                            if (progress < 0.2) {
+                                hr = warmupHR + (peakHR - warmupHR) * (progress / 0.2);
+                            } else if (progress < 0.8) {
+                                hr = peakHR + (Math.sin(progress * Math.PI * 4) * 8);
+                            } else {
+                                hr = peakHR - (peakHR - cooldownHR) * ((progress - 0.8) / 0.2);
+                            }
+                            heartRateData.push(Math.round(hr));
+                            
+                            const basePower = 350;
+                            const powerVariation = basePower * 0.25;
+                            const power = basePower + Math.sin(progress * Math.PI * 6) * powerVariation + (Math.random() - 0.5) * 30;
+                            powerData.push(Math.round(power));
+                        }
+                        
+                        return { timePoints, heartRateData, powerData };
+                    };
+                    
+                    const lastData = generateRealisticWorkoutData(lastWorkout.duration, lastWorkout.avgHR, lastWorkout.volume);
+                    const currentData = generateRealisticWorkoutData(currentWorkout.duration, currentWorkout.avgHR, currentWorkout.volume);
+                    
+                    // Update current workout chart with realistic data
+                    cwChart.data.labels = lastData.timePoints;
+                    cwChart.data.datasets[0].data = lastData.heartRateData;
+                    cwChart.data.datasets[1].data = currentData.heartRateData;
+                    cwChart.data.datasets[2].data = lastData.powerData;
+                    cwChart.data.datasets[3].data = currentData.powerData;
+                    cwChart.update('none');
+                }
+            }
+            
+            // Initialize voice support buttons
+            if (btnListen) btnListen.addEventListener('click', startListening);
+            btnStop.addEventListener('click', stopListening);
+            btnCheer.addEventListener('click', ()=> speak("You're showing up—that's the hardest part. Proud of you. Let's do this together."));
+            
+            // Smooth scroll to sections when clicking progress dots
+            document.querySelectorAll('.progress-dot').forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    const sections = document.querySelectorAll('.section');
+                    if (sections[index]) {
+                        sections[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+            
+            // Chart refresh buttons
+            const refreshLastBtn = document.getElementById('refreshLastChart');
+            const refreshCurrentBtn = document.getElementById('refreshCurrentChart');
+            const refreshForecastBtn = document.getElementById('refreshForecastChart');
+            
+            if (refreshLastBtn) refreshLastBtn.addEventListener('click', refreshLastChart);
+            if (refreshCurrentBtn) refreshCurrentBtn.addEventListener('click', refreshCurrentChart);
+            if (refreshForecastBtn) refreshForecastBtn.addEventListener('click', refreshForecastChart);
+            
+            // Forecast view toggles
+            const weeklyForecastBtn = document.getElementById('viewWeeklyForecast');
+            const monthlyForecastBtn = document.getElementById('viewMonthlyForecast');
+            
+            if (weeklyForecastBtn) weeklyForecastBtn.addEventListener('click', setWeeklyForecastView);
+            if (monthlyForecastBtn) monthlyForecastBtn.addEventListener('click', setMonthlyForecastView);
+        });
+    </script>
+</body>
+</html>
+

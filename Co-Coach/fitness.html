@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Fitness - CoCoach</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1/dist/kalidokit.umd.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0B0B10 0%, #1A1B20 100%); }
+        .card { background: #1A1B20; border: 1px solid rgba(0,178,255,0.15); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,178,255,.08); }
+        .gradient-text { background: linear-gradient(135deg, #00B2FF, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .chip { background: rgba(0,178,255,.12); border: 1px solid rgba(0,178,255,.35); color: #00B2FF; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .drill-btn { background: linear-gradient(135deg, #252730 0%, #1E1F28 100%); border: 2px solid rgba(0,178,255,0.4); border-radius: 12px; padding: 14px 18px; color:#FFFFFF; transition: all .2s; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(0,178,255,.15); }
+        .drill-btn:hover { border-color:#00B2FF; box-shadow: 0 8px 28px rgba(0,178,255,.35); transform: translateY(-2px); background: linear-gradient(135deg, #2A2C38 0%, #23242E 100%); }
+        .drill-btn.active { border-color:#1EF9A1; background: rgba(30,249,161,0.1); box-shadow: 0 8px 28px rgba(30,249,161,.25); }
+        .feedback-item { padding: 12px; border-radius: 8px; border-left: 3px solid #00B2FF; background: rgba(0,178,255,0.05); margin-bottom: 8px; }
+        .feedback-item.good { border-left-color: #1EF9A1; background: rgba(30,249,161,0.05); }
+        .feedback-item.warning { border-left-color: #FFA500; background: rgba(255,165,0,0.05); }
+        .metric-display { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 8px; background: rgba(0,178,255,0.05); margin-bottom: 6px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold gradient-text">General Fitness</h1>
+                <p class="text-gray-400">Real-time form analysis powered by Computer Vision</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="openExercisesBtn" class="px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-white hover:border-[#00B2FF] font-semibold">Choose Exercise</button>
+                <a href="como.html" class="px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-[#00B2FF] hover:bg-[rgba(0,178,255,0.10)] font-semibold">Back to CoMo</a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 card">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="chip">Camera</span>
+                        <span id="poseDetected" class="hidden chip" style="color:#1EF9A1;border-color:rgba(30,249,161,0.35);background:rgba(30,249,161,0.12)">Pose Detected</span>
+                        <span id="currentExerciseChip" class="chip hidden"></span>
+                    </div>
+                    <button id="toggleBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#00B2FF] to-[#7C3AED] text-white font-semibold">Start</button>
+                </div>
+                <div class="relative rounded-2xl overflow-hidden bg-black" style="aspect-ratio:16/9;">
+                    <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+                    <canvas id="canvas" class="absolute inset-0 w-full h-full" style="display:none;"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="text-xl font-bold text-white mb-3">Live Feedback</h2>
+                <div id="avatarContainer" class="mb-4 rounded-xl overflow-hidden bg-black/30" style="aspect-ratio:1/1; position:relative;">
+                    <canvas id="avatarCanvas" style="width:100%; height:100%; display:block;"></canvas>
+                    <div id="avatarPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+                        <div class="text-center">
+                            <div class="mb-2">👤</div>
+                            <div>Avatar will appear here</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="metricsContainer" class="mb-4 hidden">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-2">Metrics</h3>
+                    <div id="metricsDisplay"></div>
+                </div>
+                <div id="feedbackContainer" class="space-y-2 max-h-[40vh] overflow-auto">
+                    <div class="text-gray-400">Choose an exercise to begin...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coach FAB -->
+        <div class="fixed bottom-4 right-4 z-50 group cursor-pointer" aria-label="Coach">
+            <div class="relative rounded-full p-[2px] bg-gradient-to-br from-[#00B2FF] via-[#7C3AED] to-[#1EF9A1] shadow-[0_10px_30px_rgba(0,178,255,0.35)] transition-transform group-hover:scale-105">
+                <div class="rounded-full bg-[#0B0B10] p-1">
+                    <model-viewer id="coachAvatarFitness"
+                        src="assets/coach.glb"
+                        camera-controls
+                        disable-zoom
+                        style="width:68px; height:68px; border-radius:50%; overflow:hidden;"
+                        camera-orbit="0deg 80deg 3.6m"
+                        ar
+                        ar-modes="webxr scene-viewer quick-look">
+                    </model-viewer>
+                </div>
+            </div>
+            <span class="absolute -top-8 right-0 text-xs px-2 py-1 rounded-md bg-[#0B0B10]/90 border border-[rgba(0,178,255,0.25)] text-white opacity-0 group-hover:opacity-100 transition-opacity">Your Coach</span>
+        </div>
+
+        <!-- Exercise Selection Modal -->
+        <div id="exercisesModal" class="modal-overlay hidden">
+            <div class="w-full max-w-3xl card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-bold text-white gradient-text">Select Exercise</h3>
+                    <button id="closeExercisesBtn" class="text-gray-400 hover:text-white text-xl px-2">&times;</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <button class="drill-btn" data-exercise="squats">
+                        <div class="text-lg font-bold mb-1">🏋️ Squats</div>
+                        <div class="text-xs text-gray-200">Knee & hip alignment</div>
+                    </button>
+                    <button class="drill-btn" data-exercise="pushups">
+                        <div class="text-lg font-bold mb-1">💪 Push-ups</div>
+                        <div class="text-xs text-gray-200">Body alignment & form</div>
+                    </button>
+                    <button class="drill-btn" data-exercise="lunges">
+                        <div class="text-lg font-bold mb-1">🦵 Lunges</div>
+                        <div class="text-xs text-gray-200">Balance & knee tracking</div>
+                    </button>
+                    <button class="drill-btn" data-exercise="plank">
+                        <div class="text-lg font-bold mb-1">🧘 Plank</div>
+                        <div class="text-xs text-gray-200">Core stability & alignment</div>
+                    </button>
+                    <button class="drill-btn" data-exercise="jumpingjacks">
+                        <div class="text-lg font-bold mb-1">🤸 Jumping Jacks</div>
+                        <div class="text-xs text-gray-200">Coordination & symmetry</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let camera = null, pose = null, isRunning = false, currentExercise = null;
+        let speechSynthesis = window.speechSynthesis, lastVoiceTime = 0;
+        const VOICE_DELAY = 2000;
+        let sessionStartTime = null, repsCount = 0;
+        let exerciseMetrics = {};
+
+        function speak(text) {
+            const now = Date.now();
+            if (now - lastVoiceTime < VOICE_DELAY) return;
+            speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 0.95;
+            utterance.volume = 0.8;
+            speechSynthesis.speak(utterance);
+            lastVoiceTime = now;
+        }
+
+        function addFeedback(message, type = 'info') {
+            const container = document.getElementById('feedbackContainer');
+            const item = document.createElement('div');
+            item.className = `feedback-item ${type}`;
+            item.innerHTML = `<div class="text-sm text-white">${message}</div>`;
+            container.prepend(item);
+            if (container.children.length > 15) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function updateMetrics(metrics) {
+            const display = document.getElementById('metricsDisplay');
+            display.innerHTML = '';
+            for (const [key, value] of Object.entries(metrics)) {
+                const div = document.createElement('div');
+                div.className = 'metric-display';
+                div.innerHTML = `
+                    <span class="text-gray-400 text-sm">${key}</span>
+                    <span class="text-white font-semibold text-sm">${value}</span>
+                `;
+                display.appendChild(div);
+            }
+            document.getElementById('metricsContainer').classList.remove('hidden');
+        }
+
+        function calculateAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180) angle = 360 - angle;
+            return angle;
+        }
+
+        function analyzeSquats(landmarks) {
+            const leftHip = landmarks[23], leftKnee = landmarks[25], leftAnkle = landmarks[27];
+            const rightHip = landmarks[24], rightKnee = landmarks[26], rightAnkle = landmarks[28];
+            const leftShoulder = landmarks[11], rightShoulder = landmarks[12];
+
+            const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+            const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+            const avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
+
+            const hipY = (leftHip.y + rightHip.y) / 2;
+            const kneeY = (leftKnee.y + rightKnee.y) / 2;
+            const hipDepth = Math.abs(hipY - kneeY);
+
+            const shoulderX = (leftShoulder.x + rightShoulder.x) / 2;
+            const hipX = (leftHip.x + rightHip.x) / 2;
+            const spineAlignment = Math.abs(shoulderX - hipX);
+
+            exerciseMetrics = {
+                'Knee Angle': `${avgKneeAngle.toFixed(0)}°`,
+                'Hip Depth': hipDepth > 0.1 ? 'Good' : 'Shallow',
+                'Spine': spineAlignment < 0.05 ? 'Aligned' : 'Leaning'
+            };
+            updateMetrics(exerciseMetrics);
+
+            if (avgKneeAngle >= 85 && avgKneeAngle <= 95) {
+                addFeedback('✓ Perfect knee angle! Keep it up!', 'good');
+            } else if (avgKneeAngle < 85) {
+                addFeedback('⚠ Go deeper - aim for 90° knee bend', 'warning');
+                speak('Go deeper');
+            } else {
+                addFeedback('⚠ Don\'t go too deep - 90 degrees is ideal', 'warning');
+            }
+
+            if (spineAlignment > 0.08) {
+                addFeedback('⚠ Keep your spine vertical', 'warning');
+                speak('Straighten your back');
+            }
+        }
+
+        function analyzePushups(landmarks) {
+            const leftShoulder = landmarks[11], leftHip = landmarks[23], leftAnkle = landmarks[27];
+            const rightShoulder = landmarks[12], rightHip = landmarks[24], rightAnkle = landmarks[28];
+            const leftElbow = landmarks[13], rightElbow = landmarks[14];
+            const leftWrist = landmarks[15], rightWrist = landmarks[16];
+
+            const leftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
+            const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
+            const avgElbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
+
+            const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+            const hipY = (leftHip.y + rightHip.y) / 2;
+            const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
+            
+            const bodyLineDeviation = Math.abs((shoulderY + ankleY) / 2 - hipY);
+
+            exerciseMetrics = {
+                'Elbow Angle': `${avgElbowAngle.toFixed(0)}°`,
+                'Body Line': bodyLineDeviation < 0.05 ? 'Straight' : 'Sagging'
+            };
+            updateMetrics(exerciseMetrics);
+
+            if (avgElbowAngle >= 85 && avgElbowAngle <= 95) {
+                addFeedback('✓ Perfect push-up depth!', 'good');
+            } else if (avgElbowAngle > 120) {
+                addFeedback('⚠ Lower your chest more - 90° elbows', 'warning');
+                speak('Go lower');
+            }
+
+            if (bodyLineDeviation > 0.06) {
+                addFeedback('⚠ Engage core - keep body straight!', 'warning');
+                speak('Tighten your core');
+            } else {
+                addFeedback('✓ Great body alignment!', 'good');
+            }
+        }
+
+        function analyzeLunges(landmarks) {
+            const leftHip = landmarks[23], leftKnee = landmarks[25], leftAnkle = landmarks[27];
+            const rightHip = landmarks[24], rightKnee = landmarks[26], rightAnkle = landmarks[28];
+
+            const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+            const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+
+            const frontKneeAngle = Math.min(leftKneeAngle, rightKneeAngle);
+            const backKneeAngle = Math.max(leftKneeAngle, rightKneeAngle);
+
+            const hipLevel = Math.abs(leftHip.y - rightHip.y);
+
+            exerciseMetrics = {
+                'Front Knee': `${frontKneeAngle.toFixed(0)}°`,
+                'Back Leg': backKneeAngle > 150 ? 'Extended' : 'Bent',
+                'Hip Balance': hipLevel < 0.05 ? 'Level' : 'Tilted'
+            };
+            updateMetrics(exerciseMetrics);
+
+            if (frontKneeAngle >= 85 && frontKneeAngle <= 95) {
+                addFeedback('✓ Perfect front knee angle!', 'good');
+            } else if (frontKneeAngle > 95) {
+                addFeedback('⚠ Lower down - aim for 90° front knee', 'warning');
+                speak('Go deeper');
+            }
+
+            if (hipLevel > 0.08) {
+                addFeedback('⚠ Keep hips level and balanced', 'warning');
+                speak('Balance your hips');
+            }
+        }
+
+        function analyzePlank(landmarks) {
+            const leftShoulder = landmarks[11], leftHip = landmarks[23], leftAnkle = landmarks[27];
+            const rightShoulder = landmarks[12], rightHip = landmarks[24], rightAnkle = landmarks[28];
+
+            const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+            const hipY = (leftHip.y + rightHip.y) / 2;
+            const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
+
+            const shoulderAnkleSlope = (ankleY - shoulderY) / Math.abs((leftAnkle.x + rightAnkle.x) / 2 - (leftShoulder.x + rightShoulder.x) / 2);
+            const hipSag = hipY - (shoulderY + ankleY) / 2;
+
+            const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+            const elbowWidth = Math.abs(landmarks[13].x - landmarks[14].x);
+            const shoulderAlignment = Math.abs(shoulderWidth - elbowWidth);
+
+            exerciseMetrics = {
+                'Body Line': Math.abs(hipSag) < 0.04 ? 'Straight' : (hipSag > 0 ? 'Sagging' : 'Raised'),
+                'Shoulders': shoulderAlignment < 0.05 ? 'Aligned' : 'Uneven'
+            };
+            updateMetrics(exerciseMetrics);
+
+            if (Math.abs(hipSag) < 0.04) {
+                addFeedback('✓ Perfect plank form!', 'good');
+            } else if (hipSag > 0.04) {
+                addFeedback('⚠ Engage core - hips are sagging', 'warning');
+                speak('Lift your hips');
+            } else {
+                addFeedback('⚠ Lower hips slightly - too high', 'warning');
+                speak('Lower your hips');
+            }
+
+            if (shoulderAlignment > 0.08) {
+                addFeedback('⚠ Stack shoulders over elbows', 'warning');
+            }
+        }
+
+        function analyzeJumpingJacks(landmarks) {
+            const leftShoulder = landmarks[11], rightShoulder = landmarks[12];
+            const leftElbow = landmarks[13], rightElbow = landmarks[14];
+            const leftWrist = landmarks[15], rightWrist = landmarks[16];
+            const leftHip = landmarks[23], rightHip = landmarks[24];
+            const leftAnkle = landmarks[27], rightAnkle = landmarks[28];
+
+            const leftArmAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
+            const rightArmAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
+            const avgArmAngle = (leftArmAngle + rightArmAngle) / 2;
+
+            const legSpread = Math.abs(leftAnkle.x - rightAnkle.x);
+            const shoulderSpread = Math.abs(leftShoulder.x - rightShoulder.x);
+
+            const armSymmetry = Math.abs(leftWrist.y - rightWrist.y);
+
+            exerciseMetrics = {
+                'Arm Extension': avgArmAngle > 160 ? 'Full' : 'Partial',
+                'Leg Spread': legSpread > shoulderSpread * 1.5 ? 'Wide' : 'Narrow',
+                'Symmetry': armSymmetry < 0.05 ? 'Balanced' : 'Uneven'
+            };
+            updateMetrics(exerciseMetrics);
+
+            if (avgArmAngle > 160 && legSpread > shoulderSpread * 1.5) {
+                addFeedback('✓ Excellent jumping jack form!', 'good');
+            } else if (avgArmAngle < 160) {
+                addFeedback('⚠ Extend arms fully overhead', 'warning');
+                speak('Reach higher');
+            }
+
+            if (legSpread < shoulderSpread * 1.3) {
+                addFeedback('⚠ Jump wider - spread legs more', 'warning');
+            }
+
+            if (armSymmetry > 0.08) {
+                addFeedback('⚠ Keep arms symmetrical', 'warning');
+            }
+        }
+
+        function onResults(results) {
+            if (!results.poseLandmarks || !currentExercise || !isRunning) return;
+
+            const poseDetectedChip = document.getElementById('poseDetected');
+            poseDetectedChip.classList.remove('hidden');
+
+            const landmarks = results.poseLandmarks;
+
+            retargetPoseToAvatar(landmarks);
+
+            switch(currentExercise) {
+                case 'squats':
+                    analyzeSquats(landmarks);
+                    break;
+                case 'pushups':
+                    analyzePushups(landmarks);
+                    break;
+                case 'lunges':
+                    analyzeLunges(landmarks);
+                    break;
+                case 'plank':
+                    analyzePlank(landmarks);
+                    break;
+                case 'jumpingjacks':
+                    analyzeJumpingJacks(landmarks);
+                    break;
+            }
+
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = results.image.width;
+            canvas.height = results.image.height;
+
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+            if (results.poseLandmarks) {
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00B2FF', lineWidth: 3});
+                drawLandmarks(ctx, results.poseLandmarks, {color: '#1EF9A1', lineWidth: 1.5, radius: 4});
+            }
+
+            ctx.restore();
+        }
+
+        function initializePose() {
+            pose = new Pose({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+            });
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+            pose.onResults(onResults);
+        }
+
+        let scene, avatarCamera, renderer, avatarModel, avatarBones = {};
+
+        function initializeAvatar() {
+            const canvas = document.getElementById('avatarCanvas');
+            const container = document.getElementById('avatarContainer');
+            if (!canvas || !container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0B0B10);
+
+            avatarCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+            avatarCamera.position.set(0, 1.5, 3);
+            avatarCamera.lookAt(0, 1, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(2, 3, 2);
+            scene.add(directionalLight);
+
+            const backLight = new THREE.DirectionalLight(0x00B2FF, 0.3);
+            backLight.position.set(-2, 2, -2);
+            scene.add(backLight);
+
+            const loader = new THREE.GLTFLoader();
+            loader.load('assets/present.glb', (gltf) => {
+                avatarModel = gltf.scene;
+                avatarModel.position.set(0, 0, 0);
+                avatarModel.scale.set(1, 1, 1);
+                scene.add(avatarModel);
+
+                avatarModel.traverse((object) => {
+                    if (object.isBone) {
+                        avatarBones[object.name] = object;
+                        console.log('Found bone:', object.name);
+                    }
+                });
+
+                document.getElementById('avatarPlaceholder').style.display = 'none';
+                animate();
+            }, undefined, (error) => {
+                console.error('Avatar loading error:', error);
+            });
+        }
+
+        function retargetPoseToAvatar(poseLandmarks) {
+            if (!avatarModel || !Kalidokit) return;
+
+            const video = document.getElementById('video');
+            const riggedPose = Kalidokit.Pose.solve(poseLandmarks, {
+                runtime: 'mediapipe',
+                video: video,
+                enableLegs: true
+            });
+
+            if (!riggedPose) {
+                console.warn('Kalidokit did not return rigged pose data');
+                return;
+            }
+
+            if (Object.keys(avatarBones).length === 0) {
+                avatarModel.rotation.y = riggedPose.Hips.rotation.y * 0.5;
+                const hipOffset = riggedPose.Hips.position;
+                avatarModel.position.x = -hipOffset.x * 2;
+                avatarModel.position.y = hipOffset.y * 1.5 - 0.5;
+                const time = Date.now() * 0.001;
+                avatarModel.rotation.z = Math.sin(time * 2) * 0.05;
+                return;
+            }
+
+            applyRotationToBone('Hips', riggedPose.Hips.rotation);
+            applyRotationToBone('Spine', riggedPose.Spine);
+            applyRotationToBone('Chest', riggedPose.Chest, 0.25);
+            applyRotationToBone('Neck', riggedPose.Neck, 0.5);
+            applyRotationToBone('Head', riggedPose.Head);
+
+            applyRotationToBone('LeftUpperArm', riggedPose.LeftUpperArm);
+            applyRotationToBone('LeftLowerArm', riggedPose.LeftLowerArm);
+            applyRotationToBone('RightUpperArm', riggedPose.RightUpperArm);
+            applyRotationToBone('RightLowerArm', riggedPose.RightLowerArm);
+
+            applyRotationToBone('LeftUpperLeg', riggedPose.LeftUpperLeg);
+            applyRotationToBone('LeftLowerLeg', riggedPose.LeftLowerLeg);
+            applyRotationToBone('RightUpperLeg', riggedPose.RightUpperLeg);
+            applyRotationToBone('RightLowerLeg', riggedPose.RightLowerLeg);
+
+            if (riggedPose.Hips && riggedPose.Hips.position) {
+                const hipPos = riggedPose.Hips.position;
+                avatarModel.position.x = -hipPos.x * 2;
+                avatarModel.position.y = hipPos.y * 1.5 - 0.5;
+                avatarModel.position.z = -hipPos.z * 2;
+            }
+        }
+
+        function applyRotationToBone(kalidoName, rotation, dampener = 1, lerpAmount = 0.3) {
+            if (!rotation) return;
+
+            const boneMap = {
+                'Hips': ['Hips', 'mixamorigHips', 'hips'],
+                'Spine': ['Spine', 'mixamorigSpine', 'spine'],
+                'Chest': ['Chest', 'mixamorigSpine1', 'chest', 'upper_body'],
+                'Neck': ['Neck', 'mixamorigNeck', 'neck'],
+                'Head': ['Head', 'mixamorigHead', 'head'],
+                'LeftUpperArm': ['LeftUpperArm', 'mixamorigLeftArm', 'LeftArm', 'left_upper_arm'],
+                'LeftLowerArm': ['LeftLowerArm', 'mixamorigLeftForeArm', 'LeftForeArm', 'left_lower_arm'],
+                'RightUpperArm': ['RightUpperArm', 'mixamorigRightArm', 'RightArm', 'right_upper_arm'],
+                'RightLowerArm': ['RightLowerArm', 'mixamorigRightForeArm', 'RightForeArm', 'right_lower_arm'],
+                'LeftUpperLeg': ['LeftUpperLeg', 'mixamorigLeftUpLeg', 'LeftUpLeg', 'left_upper_leg'],
+                'LeftLowerLeg': ['LeftLowerLeg', 'mixamorigLeftLeg', 'LeftLeg', 'left_lower_leg'],
+                'RightUpperLeg': ['RightUpperLeg', 'mixamorigRightUpLeg', 'RightUpLeg', 'right_upper_leg'],
+                'RightLowerLeg': ['RightLowerLeg', 'mixamorigRightLeg', 'RightLeg', 'right_lower_leg']
+            };
+
+            const possibleNames = boneMap[kalidoName] || [kalidoName];
+            let bone = null;
+
+            for (const name of possibleNames) {
+                if (avatarBones[name]) {
+                    bone = avatarBones[name];
+                    break;
+                }
+            }
+
+            if (!bone) return;
+
+            const euler = new THREE.Euler(
+                rotation.x * dampener,
+                rotation.y * dampener,
+                rotation.z * dampener
+            );
+            const targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
+            bone.quaternion.slerp(targetQuaternion, lerpAmount);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (renderer && scene && avatarCamera) {
+                renderer.render(scene, avatarCamera);
+            }
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720, facingMode: 'user' },
+                    audio: false
+                });
+                video.srcObject = stream;
+                await video.play();
+
+                camera = new Camera(video, {
+                    onFrame: async () => {
+                        if (pose && isRunning) {
+                            await pose.send({ image: video });
+                        }
+                    },
+                    width: 1280,
+                    height: 720
+                });
+
+                canvas.style.display = 'block';
+                await camera.start();
+                isRunning = true;
+                sessionStartTime = Date.now();
+                addFeedback(`📹 Camera started - ${currentExercise ? currentExercise.toUpperCase() + ' selected' : 'Choose an exercise'}`, 'good');
+            } catch (err) {
+                console.error('Camera error:', err);
+                addFeedback('❌ Camera access denied. Please allow camera permissions.', 'warning');
+            }
+        }
+
+        function stopCamera() {
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            const video = document.getElementById('video');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            document.getElementById('canvas').style.display = 'none';
+            document.getElementById('poseDetected').classList.add('hidden');
+            isRunning = false;
+
+            if (sessionStartTime && currentExercise) {
+                saveWorkoutSession();
+            }
+        }
+
+        async function saveWorkoutSession() {
+            const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+            
+            try {
+                const response = await fetch('/api/workout-history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        exercise_type: currentExercise,
+                        sport_category: 'fitness',
+                        duration_seconds: duration,
+                        reps_count: repsCount,
+                        metrics: exerciseMetrics
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Workout saved successfully');
+                }
+            } catch (err) {
+                console.log('Not logged in - session not saved');
+            }
+        }
+
+        document.getElementById('toggleBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('toggleBtn');
+            if (!isRunning) {
+                if (!pose) initializePose();
+                await startCamera();
+                btn.textContent = 'Stop';
+                btn.classList.remove('from-[#00B2FF]', 'to-[#7C3AED]');
+                btn.classList.add('bg-red-600');
+            } else {
+                stopCamera();
+                btn.textContent = 'Start';
+                btn.classList.add('from-[#00B2FF]', 'to-[#7C3AED]');
+                btn.classList.remove('bg-red-600');
+            }
+        });
+
+        document.getElementById('openExercisesBtn').addEventListener('click', () => {
+            document.getElementById('exercisesModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeExercisesBtn').addEventListener('click', () => {
+            document.getElementById('exercisesModal').classList.add('hidden');
+        });
+
+        document.querySelectorAll('[data-exercise]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const exercise = btn.getAttribute('data-exercise');
+                currentExercise = exercise;
+                document.getElementById('currentExerciseChip').textContent = exercise.toUpperCase();
+                document.getElementById('currentExerciseChip').classList.remove('hidden');
+                document.getElementById('exercisesModal').classList.add('hidden');
+                
+                document.querySelectorAll('[data-exercise]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                addFeedback(`🎯 ${exercise.toUpperCase()} selected - Press Start to begin!`, 'good');
+                speak(`${exercise} selected. Press start when ready.`);
+                repsCount = 0;
+                exerciseMetrics = {};
+            });
+        });
+
+        document.getElementById('exercisesModal').addEventListener('click', (e) => {
+            if (e.target.id === 'exercisesModal') {
+                document.getElementById('exercisesModal').classList.add('hidden');
+            }
+        });
+
+        initializeAvatar();
+        addFeedback('👋 Welcome to General Fitness! Choose an exercise to get started.', 'good');
+    </script>
+</body>
+</html>

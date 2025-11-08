@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Golf Posture Feedback - CoCoach</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <!-- model-viewer for GLB -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0B0B10 0%, #1A1B20 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .background-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .3;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .orb-1 {
+            width: 520px;
+            height: 520px;
+            background: linear-gradient(135deg, #00B2FF, #7C3AED);
+            top: -220px;
+            left: -220px;
+        }
+        
+        .orb-2 {
+            width: 420px;
+            height: 420px;
+            background: linear-gradient(135deg, #7C3AED, #1EF9A1);
+            bottom: -160px;
+            right: -160px;
+            animation-delay: 6s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(40px,40px) scale(1.05); }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00B2FF, #7C3AED);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,178,255,.08);
+        }
+        
+        .card:hover {
+            border-color: rgba(0,178,255,.3);
+            box-shadow: 0 12px 48px rgba(0,178,255,.2);
+        }
+        
+        .feedback-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,178,255,.3); }
+            50% { box-shadow: 0 0 40px rgba(0,178,255,.6); }
+        }
+        
+        .drill-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .drill-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .drill-btn.active {
+            background: linear-gradient(135deg, rgba(0,178,255,0.2), rgba(124,58,237,0.2));
+            border-color: #00B2FF;
+        }
+        
+        .metric-bar {
+            background: rgba(0,178,255,.1);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .metric-fill {
+            background: linear-gradient(90deg, #00B2FF, #7C3AED);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .feedback-text {
+            animation: slide-in 0.5s ease;
+        }
+        
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div id="root" style="position: relative; z-index: 1; min-height: 100vh;">
+        <!-- Main Layout -->
+        <div class="container mx-auto px-4 py-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <button onclick="window.location.href='como.html'" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-[#00B2FF] hover:bg-[rgba(0,178,255,0.10)] transition-all mb-4">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Back to CoMo
+                </button>
+                <h1 class="text-5xl font-bold gradient-text mb-3">Live Golf Posture Feedback</h1>
+                <p class="text-gray-400 text-lg">Real-time AI coaching for perfect golf posture</p>
+            </div>
+
+            <div class="flex items-center justify-end mb-4">
+                <button id="openDrillsBtn" class="px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-white hover:border-[#00B2FF]">Choose Drill</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Camera View -->
+                <div class="lg:col-span-2">
+                    <div class="card">
+                        <div class="mb-4 flex items-center justify-between">
+                            <h2 class="text-2xl font-bold text-white">Live Camera</h2>
+                            <button id="toggleBtn" class="px-6 py-2 rounded-xl bg-gradient-to-r from-[#00B2FF] to-[#7C3AED] text-white font-semibold hover:shadow-lg transition-all">
+                                Start
+                            </button>
+                        </div>
+                        <div class="relative bg-black rounded-2xl overflow-hidden" style="aspect-ratio: 16/9;">
+                            <video id="video" class="w-full h-full" autoplay playsinline></video>
+                            <canvas id="canvas" class="absolute inset-0 w-full h-full"></canvas>
+                            <div id="poseDetected" class="absolute top-4 left-4 bg-green-500/20 border border-green-500/50 text-green-500 px-4 py-2 rounded-xl font-semibold hidden">
+                                Pose Detected
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Panel -->
+                <div class="lg:col-span-1">
+                    <div class="card h-full">
+                        <h2 class="text-2xl font-bold text-white mb-4">Live Feedback</h2>
+                        <div id="feedbackContainer" class="space-y-4">
+                            <div class="text-center text-gray-400 py-8">
+                                Start your session to receive real-time feedback
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Coach FAB (no redirect) -->
+            <div class="fixed bottom-4 right-4 z-50 group cursor-pointer" aria-label="Coach">
+                <div class="relative rounded-full p-[2px] bg-gradient-to-br from-[#00B2FF] via-[#7C3AED] to-[#1EF9A1] shadow-[0_10px_30px_rgba(0,178,255,0.35)] transition-transform group-hover:scale-105">
+                    <div class="rounded-full bg-[#0B0B10] p-1">
+                        <model-viewer id="coachAvatarLive"
+                            src="assets/coach.glb"
+                            camera-controls
+                            disable-zoom
+                            style="width:72px; height:72px; border-radius:50%; overflow:hidden;"
+                            camera-orbit="0deg 80deg 3.6m"
+                            ar
+                            ar-modes="webxr scene-viewer quick-look">
+                        </model-viewer>
+                    </div>
+                </div>
+                <span class="absolute -top-8 right-0 text-xs px-2 py-1 rounded-md bg-[#0B0B10]/90 border border-[rgba(0,178,255,0.25)] text-white opacity-0 group-hover:opacity-100 transition-opacity">Coach</span>
+            </div>
+
+            <!-- Drills Modal -->
+            <div id="drillsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+                <div class="w-full max-w-4xl card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">Select a Drill</h3>
+                        <button id="closeDrillsBtn" class="text-gray-400 hover:text-white">Close</button>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="wall-back">
+                            <div class="font-bold text-white">Wall-Back</div>
+                            <div class="text-xs text-gray-400">Spine alignment</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="hip-twist">
+                            <div class="font-bold text-white">Hip Twist</div>
+                            <div class="text-xs text-gray-400">Rotation range</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="air-swing">
+                            <div class="font-bold text-white">Air Swing</div>
+                            <div class="text-xs text-gray-400">Movement sync</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="shoulder-tilt">
+                            <div class="font-bold text-white">Shoulder Level</div>
+                            <div class="text-xs text-gray-400">Balance</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="one-leg">
+                            <div class="font-bold text-white">One-Leg Hold</div>
+                            <div class="text-xs text-gray-400">Stability</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="weight-shift">
+                            <div class="font-bold text-white">Weight Shift</div>
+                            <div class="text-xs text-gray-400">Transfer control</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="rhythm">
+                            <div class="font-bold text-white">Rhythm & Tempo</div>
+                            <div class="text-xs text-gray-400">Consistency</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="posture-check">
+                            <div class="font-bold text-white">Posture Check</div>
+                            <div class="text-xs text-gray-400">Stance hold</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="follow-through">
+                            <div class="font-bold text-white">Follow Through</div>
+                            <div class="text-xs text-gray-400">Finish hold</div>
+                        </button>
+                        <button class="drill-btn bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl p-3 text-left hover:border-[#00B2FF]" data-drill="torso-rotation">
+                            <div class="font-bold text-white">Torso Rotation</div>
+                            <div class="text-xs text-gray-400">Body turn</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post-Session Feedback -->
+            <div id="postSessionCard" class="card hidden">
+                <h2 class="text-2xl font-bold text-white mb-4">Session Complete!</h2>
+                <p class="text-gray-400 mb-6">Where do you feel you struggle most?</p>
+                <div class="flex flex-wrap gap-3">
+                    <button class="px-6 py-3 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] text-white hover:border-[#00B2FF] transition-all" data-struggle="balance">
+                        Balance
+                    </button>
+                    <button class="px-6 py-3 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] text-white hover:border-[#00B2FF] transition-all" data-struggle="rotation">
+                        Rotation
+                    </button>
+                    <button class="px-6 py-3 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] text-white hover:border-[#00B2FF] transition-all" data-struggle="alignment">
+                        Alignment
+                    </button>
+                </div>
+                <div id="recommendedDrills" class="mt-6 hidden">
+                    <h3 class="text-xl font-bold text-white mb-3">Recommended Drills:</h3>
+                    <div id="drillRecommendations" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script>
+        let camera = null;
+        let pose = null;
+        let isRunning = false;
+        let currentDrill = null;
+        let speechSynthesis = window.speechSynthesis;
+        let lastFeedback = '';
+        let feedbackHistory = {};
+        let feedbackCount = 0;
+        let lastVoiceTime = 0; // Track last voice feedback time
+        const VOICE_DELAY = 1500; // 1.5 second minimum between voice feedbacks
+        let positiveFeedbackGiven = {}; // Track if we've already praised this aspect
+        let currentVoiceUtterance = null; // Track current speaking
+        let pendingVoiceQueue = []; // Queue for voice messages
+
+        // Initialize MediaPipe Pose
+        function initializePose() {
+            const poseConfig = {
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                }
+            };
+            pose = new Pose(poseConfig);
+            
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            pose.onResults(onResults);
+        }
+
+        function onResults(results) {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!results.poseLandmarks) {
+                document.getElementById('poseDetected').classList.add('hidden');
+                return;
+            }
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw landmarks
+            drawLandmarks(ctx, results.poseLandmarks);
+            
+            // Analyze posture
+            if (currentDrill) {
+                analyzeDrill(results.poseLandmarks);
+            } else {
+                analyzeGeneralPosture(results.poseLandmarks);
+            }
+            
+            ctx.restore();
+            document.getElementById('poseDetected').classList.remove('hidden');
+            
+            // Show post-session feedback after 2 minutes
+            if (isRunning && feedbackCount > 3600 && !document.getElementById('postSessionCard').classList.contains('shown')) {
+                stopCamera();
+                document.getElementById('postSessionCard').classList.remove('hidden');
+                document.getElementById('postSessionCard').classList.add('shown');
+            }
+            feedbackCount++;
+        }
+
+        function drawLandmarks(ctx, landmarks) {
+            if (!landmarks) return;
+            
+            ctx.fillStyle = '#00B2FF';
+            landmarks.forEach((landmark, index) => {
+                ctx.beginPath();
+                ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw connections
+                if (index === 0) {
+                    ctx.fillText('N', landmark.x * canvas.width, landmark.y * canvas.height - 8);
+                }
+            });
+            
+            // Draw key lines for golf pose
+            const connections = [
+                [11, 12], // shoulders
+                [11, 13], [13, 15], // left arm
+                [12, 14], [14, 16], // right arm
+                [11, 23], [12, 24], // torso
+                [23, 25], [25, 27], // left leg
+                [24, 26], [26, 28], // right leg
+            ];
+            
+            ctx.strokeStyle = 'rgba(0,178,255,0.5)';
+            ctx.lineWidth = 2;
+            connections.forEach(([a, b]) => {
+                if (landmarks[a] && landmarks[b]) {
+                    ctx.beginPath();
+                    ctx.moveTo(landmarks[a].x * canvas.width, landmarks[a].y * canvas.height);
+                    ctx.lineTo(landmarks[b].x * canvas.width, landmarks[b].y * canvas.height);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function analyzeGeneralPosture(landmarks) {
+            const feedback = [];
+            
+            // Spine tilt (shoulders to hips)
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            
+            if (leftShoulder && rightShoulder && leftHip && rightHip) {
+                const shoulderMid = {
+                    x: (leftShoulder.x + rightShoulder.x) / 2,
+                    y: (leftShoulder.y + rightShoulder.y) / 2
+                };
+                const hipMid = {
+                    x: (leftHip.x + rightHip.x) / 2,
+                    y: (leftHip.y + rightHip.y) / 2
+                };
+                
+                const dx = hipMid.x - shoulderMid.x;
+                const dy = hipMid.y - shoulderMid.y;
+                const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
+                const tilt = 90 - angle;
+                
+                if (tilt < 35) {
+                    feedback.push('Lean slightly forward');
+                } else if (tilt > 45) {
+                    feedback.push('You\'re leaning too far forward');
+                } else {
+                    feedback.push('Excellent spine angle');
+                }
+            }
+
+            // Knee bend
+            const leftKnee = landmarks[25];
+            const rightKnee = landmarks[26];
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+            
+            if (leftKnee && rightKnee && leftHip && rightHip) {
+                const leftKneeAngle = calculateAngle(landmarks[23], landmarks[25], landmarks[27]);
+                const rightKneeAngle = calculateAngle(landmarks[24], landmarks[26], landmarks[28]);
+                const avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
+                
+                if (avgKneeAngle < 15) {
+                    feedback.push('Bend your knees slightly');
+                } else if (avgKneeAngle > 25) {
+                    feedback.push('Straighten your knees a bit');
+                } else {
+                    feedback.push('Good knee position');
+                }
+            }
+
+            // Shoulder level
+            if (leftShoulder && rightShoulder) {
+                const shoulderDiff = Math.abs(leftShoulder.y - rightShoulder.y);
+                if (shoulderDiff > 0.02) {
+                    feedback.push('Level your shoulders');
+                } else {
+                    feedback.push('Shoulders are level');
+                }
+            }
+
+            if (feedback.length > 0) {
+                displayFeedback(feedback.join('. '));
+                
+                // Check if all feedback is positive
+                const allPositive = feedback.every(f => 
+                    f.toLowerCase().includes('excellent') || 
+                    f.toLowerCase().includes('good') || 
+                    f.toLowerCase().includes('perfect') ||
+                    f.toLowerCase().includes('shoulders are level')
+                );
+                
+                // Only speak corrections OR give ONE positive message
+                if (allPositive) {
+                    // Only say "perfect" once per session - 30% chance to trigger
+                    if (Math.random() > 0.70 && !positiveFeedbackGiven['general']) {
+                        speakFeedback('Excellent posture', 'general');
+                    }
+                } else {
+                    // Speak corrections (but not too often)
+                    const correction = feedback.find(f => 
+                        f.toLowerCase().includes('lean') || 
+                        f.toLowerCase().includes('bend') || 
+                        f.toLowerCase().includes('straighten') || 
+                        f.toLowerCase().includes('level') ||
+                        f.toLowerCase().includes('too')
+                    );
+                    
+                    if (correction && Math.random() > 0.90) {
+                        speakFeedback(correction);
+                    }
+                }
+            }
+        }
+
+        function calculateAngle(p1, p2, p3) {
+            const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+            const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            
+            const dot = v1.x * v2.x + v1.y * v2.y;
+            const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            
+            return Math.abs(Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI);
+        }
+
+        function analyzeDrill(landmarks) {
+            switch(currentDrill) {
+                case 'wall-back':
+                    analyzeWallBack(landmarks);
+                    break;
+                case 'hip-twist':
+                    analyzeHipTwist(landmarks);
+                    break;
+                case 'air-swing':
+                    analyzeAirSwing(landmarks);
+                    break;
+                case 'shoulder-tilt':
+                    analyzeShoulderTilt(landmarks);
+                    break;
+                case 'one-leg':
+                    analyzeOneLeg(landmarks);
+                    break;
+                case 'weight-shift':
+                    analyzeWeightShift(landmarks);
+                    break;
+                case 'rhythm':
+                    analyzeRhythm(landmarks);
+                    break;
+                case 'posture-check':
+                    analyzePostureCheck(landmarks);
+                    break;
+                case 'follow-through':
+                    analyzeFollowThrough(landmarks);
+                    break;
+                case 'torso-rotation':
+                    analyzeTorsoRotation(landmarks);
+                    break;
+            }
+        }
+
+        function analyzeWallBack(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const nose = landmarks[0];
+            
+            if (leftShoulder && rightShoulder && leftHip && rightHip && nose) {
+                const shoulderMid = { x: (leftShoulder.x + rightShoulder.x) / 2, y: (leftShoulder.y + rightShoulder.y) / 2 };
+                const hipMid = { x: (leftHip.x + rightHip.x) / 2, y: (leftHip.y + rightHip.y) / 2 };
+                
+                const spineStraightness = Math.abs(shoulderMid.x - hipMid.x);
+                
+                const text = spineStraightness < 0.05 ? 'Great! Your spine is aligned' : 'Keep your back straight against the wall';
+                displayFeedback(text);
+                
+                // Only speak if correction needed OR say "great" once
+                if (text.toLowerCase().includes('great')) {
+                    if (Math.random() > 0.75 && !positiveFeedbackGiven['wall-back']) {
+                        speakFeedback(text, 'wall-back');
+                    }
+                } else if (Math.random() > 0.85) {
+                    speakFeedback(text);
+                }
+            }
+        }
+
+        function analyzeHipTwist(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            
+            if (leftShoulder && rightShoulder && leftHip && rightHip) {
+                const shoulderAngle = Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x) * 180 / Math.PI;
+                const hipAngle = Math.atan2(rightHip.y - leftHip.y, rightHip.x - leftHip.x) * 180 / Math.PI;
+                const rotation = Math.abs(shoulderAngle - hipAngle);
+                
+                let text;
+                if (rotation < 20) {
+                    text = 'Increase your rotation';
+                } else if (rotation > 45) {
+                    text = 'Slight decrease rotation';
+                } else {
+                    text = 'Perfect rotation range';
+                }
+                displayFeedback(text);
+                
+                if (text.toLowerCase().includes('perfect')) {
+                    if (Math.random() > 0.75 && !positiveFeedbackGiven['hip-twist']) {
+                        speakFeedback('Perfect rotation', 'hip-twist');
+                    }
+                } else if (Math.random() > 0.85) {
+                    speakFeedback(text);
+                }
+            }
+        }
+
+        function analyzeAirSwing(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            
+            if (leftShoulder && rightShoulder) {
+                const shoulderHeight = Math.abs(leftShoulder.y - rightShoulder.y);
+                
+                const text = shoulderHeight < 0.05 ? 'Excellent shoulder coordination' : 'Level your shoulders during the swing';
+                displayFeedback(text);
+                if (!text.toLowerCase().includes('excellent') && Math.random() > 0.85) speakFeedback(text);
+            }
+        }
+
+        function analyzeShoulderTilt(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const leftEar = landmarks[7];
+            const rightEar = landmarks[8];
+            
+            if (!leftShoulder || !rightShoulder || !leftHip || !rightHip || !leftEar || !rightEar) return;
+            
+            const shoulderYDiff = Math.abs(leftShoulder.y - rightShoulder.y);
+            const hipYDiff = Math.abs(leftHip.y - rightHip.y);
+            const headTilt = Math.atan2(rightEar.y - leftEar.y, rightEar.x - leftEar.x) * (180 / Math.PI);
+            
+            const shoulderToHipAlign = Math.abs(
+                ((leftShoulder.x + rightShoulder.x) / 2) - ((leftHip.x + rightHip.x) / 2)
+            );
+            
+            const isShoulderLevel = shoulderYDiff < 0.03;
+            const isHipLevel = hipYDiff < 0.03;
+            const isHeadLevel = Math.abs(headTilt) < 5;
+            const isPostureAligned = shoulderToHipAlign < 0.04;
+            
+            if (isShoulderLevel && isHipLevel && isHeadLevel && isPostureAligned) {
+                displayFeedback('✓ Perfect posture! All levels aligned!');
+            } else {
+                if (!isShoulderLevel) {
+                    if (leftShoulder.y < rightShoulder.y) {
+                        displayFeedback('⚠ Right shoulder is lower - level your shoulders');
+                        if (Math.random() > 0.85) speakFeedback('Level your shoulders - right side is low');
+                    } else {
+                        displayFeedback('⚠ Left shoulder is lower - level your shoulders');
+                        if (Math.random() > 0.85) speakFeedback('Level your shoulders - left side is low');
+                    }
+                } else if (!isHipLevel && shoulderYDiff < 0.02) {
+                    if (leftHip.y < rightHip.y) {
+                        displayFeedback('⚠ Right hip is lower - balance your hips');
+                        if (Math.random() > 0.85) speakFeedback('Balance your hips');
+                    } else {
+                        displayFeedback('⚠ Left hip is lower - balance your hips');
+                        if (Math.random() > 0.85) speakFeedback('Balance your hips');
+                    }
+                } else if (!isHeadLevel && Math.abs(headTilt) > 8) {
+                    displayFeedback('⚠ Keep your head straight');
+                    if (Math.random() > 0.85) speakFeedback('Straighten your head');
+                } else if (!isPostureAligned) {
+                    displayFeedback('⚠ Align shoulders over hips');
+                    if (Math.random() > 0.85) speakFeedback('Stand up straight');
+                }
+            }
+        }
+
+        function analyzeOneLeg(landmarks) {
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+            
+            if (leftAnkle && rightAnkle) {
+                const ankleSpread = Math.abs(leftAnkle.x - rightAnkle.x);
+                
+                const text = ankleSpread < 0.15 ? 'Focus on balance, keep stable' : 'Good, shifting weight properly';
+                displayFeedback(text);
+                if (!text.toLowerCase().includes('good') && Math.random() > 0.85) speakFeedback(text);
+            }
+        }
+
+        function analyzeWeightShift(landmarks) {
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+            
+            if (leftHip && rightHip && leftAnkle && rightAnkle) {
+                const hipBalance = Math.abs((leftHip.y + rightHip.y) / 2 - (landmarks[23].y + landmarks[24].y) / 2);
+                const weightTransfer = Math.abs(leftHip.y - rightHip.y);
+                
+                let text;
+                if (weightTransfer < 0.02) {
+                    text = 'Start shifting weight to your back foot';
+                } else if (weightTransfer > 0.08) {
+                    text = 'Transfer weight smoothly to your front foot';
+                } else {
+                    text = 'Excellent weight transfer technique';
+                }
+                displayFeedback(text);
+                
+                // Say positive feedback with 50% chance if not already said
+                if (text.toLowerCase().includes('excellent') || text.toLowerCase().includes('consistent') || text.toLowerCase().includes('perfect') || text.toLowerCase().includes('great')) {
+                    if (Math.random() > 0.50) {
+                        speakFeedback(text);
+                    }
+                } else if (Math.random() > 0.85) {
+                    speakFeedback(text);
+                }
+            }
+        }
+
+        function analyzeRhythm(landmarks) {
+            const nose = landmarks[0];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            
+            if (nose && leftHip && rightHip) {
+                const movementSpeed = Math.abs(nose.y - feedbackHistory.lastNoseY || 0);
+                feedbackHistory.lastNoseY = nose.y;
+                
+                let text;
+                if (movementSpeed < 0.001) {
+                    text = 'Maintain a smooth rhythm throughout';
+                } else if (movementSpeed > 0.01) {
+                    text = 'Slow down for better tempo control';
+                } else {
+                    text = 'Your rhythm looks consistent';
+                }
+                displayFeedback(text);
+                
+                // Say positive feedback with 50% chance if not already said
+                if (text.toLowerCase().includes('excellent') || text.toLowerCase().includes('consistent') || text.toLowerCase().includes('perfect') || text.toLowerCase().includes('great')) {
+                    if (Math.random() > 0.50) {
+                        speakFeedback(text);
+                    }
+                } else if (Math.random() > 0.85) {
+                    speakFeedback(text);
+                }
+            }
+        }
+
+        function analyzePostureCheck(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            
+            if (leftShoulder && rightShoulder && leftHip && rightHip) {
+                const shoulderLevel = Math.abs(leftShoulder.y - rightShoulder.y);
+                const hipLevel = Math.abs(leftHip.y - rightHip.y);
+                const spineAngle = Math.abs((leftShoulder.y + rightShoulder.y) / 2 - (leftHip.y + rightHip.y) / 2);
+                
+                let issues = [];
+                if (shoulderLevel > 0.03) issues.push('shoulders uneven');
+                if (hipLevel > 0.03) issues.push('hips uneven');
+                if (spineAngle > 0.15) issues.push('spine angled');
+                
+                const text = issues.length === 0 ? 'Perfect athletic posture maintained' : 'Correct: ' + issues.join(', ');
+                displayFeedback(text);
+                // Only speak for actual corrections, not when perfect
+                if (issues.length > 0 && Math.random() > 0.85) speakFeedback(text);
+            }
+        }
+
+        function analyzeFollowThrough(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftElbow = landmarks[13];
+            const rightElbow = landmarks[14];
+            
+            if (leftShoulder && rightShoulder && leftElbow && rightElbow) {
+                const shoulderHeight = Math.abs(leftShoulder.y - rightShoulder.y);
+                const elbowExtension = Math.abs(leftElbow.y - rightElbow.y);
+                
+                const text = shoulderHeight < 0.05 && elbowExtension < 0.10 ? 'Great follow-through position. Hold it.' : 'Extend through the finish and hold your pose';
+                displayFeedback(text);
+                // Only speak if correction is needed
+                if (!text.toLowerCase().includes('great') && Math.random() > 0.85) speakFeedback(text);
+            }
+        }
+
+        function analyzeTorsoRotation(landmarks) {
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            
+            if (leftShoulder && rightShoulder && leftHip && rightHip) {
+                const shoulderLine = Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x) * 180 / Math.PI;
+                const hipLine = Math.atan2(rightHip.y - leftHip.y, rightHip.x - leftHip.x) * 180 / Math.PI;
+                const rotation = Math.abs(shoulderLine - hipLine);
+                
+                let text;
+                if (rotation < 15) {
+                    text = 'Increase torso rotation for power';
+                } else if (rotation > 90) {
+                    text = 'Reduce rotation to maintain control';
+                } else {
+                    text = 'Excellent torso rotation range';
+                }
+                displayFeedback(text);
+                
+                // Say positive feedback with 50% chance if not already said
+                if (text.toLowerCase().includes('excellent') || text.toLowerCase().includes('consistent') || text.toLowerCase().includes('perfect') || text.toLowerCase().includes('great')) {
+                    if (Math.random() > 0.50) {
+                        speakFeedback(text);
+                    }
+                } else if (Math.random() > 0.85) {
+                    speakFeedback(text);
+                }
+            }
+        }
+
+        function displayFeedback(text) {
+            if (text === lastFeedback) return;
+            lastFeedback = text;
+            
+            const container = document.getElementById('feedbackContainer');
+            
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'feedback-text bg-[#0B0B10] border border-[rgba(0,178,255,0.25)] rounded-xl p-4 mb-2';
+            feedbackDiv.innerHTML = `<p class="text-white font-medium">${text}</p>`;
+            
+            container.insertBefore(feedbackDiv, container.firstChild);
+            
+            // Keep only last 5 feedbacks
+            while (container.children.length > 5) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function speakFeedback(text, key = null) {
+            // Check if we should wait for voice delay
+            const currentTime = Date.now();
+            if (currentTime - lastVoiceTime < VOICE_DELAY) {
+                return;
+            }
+            
+            // If this is positive feedback and we've already said it, don't repeat
+            if (key && positiveFeedbackGiven[key]) {
+                return;
+            }
+            
+            // Cancel any current speech immediately
+            speechSynthesis.cancel();
+            currentVoiceUtterance = null;
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.85; // Slightly slower, calmer voice
+            utterance.pitch = 0.9; // Lower pitch for calmer tone
+            utterance.volume = 0.8;
+            
+            // Track when utterance starts
+            utterance.onstart = () => {
+                currentVoiceUtterance = utterance;
+            };
+            
+            // Track when utterance ends
+            utterance.onend = () => {
+                currentVoiceUtterance = null;
+                if (key) {
+                    positiveFeedbackGiven[key] = true; // Mark as said once
+                }
+            };
+            
+            speechSynthesis.speak(utterance);
+            lastVoiceTime = currentTime; // Update last voice time
+        }
+
+        async function startCamera() {
+            if (isRunning) {
+                stopCamera();
+                return;
+            }
+            
+            isRunning = true;
+            feedbackCount = 0;
+            document.getElementById('toggleBtn').textContent = 'Stop';
+            document.getElementById('toggleBtn').className = 'px-6 py-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:shadow-lg transition-all';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user', width: 1280, height: 720 } 
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                await new Promise(resolve => {
+                    video.onloadedmetadata = resolve;
+                });
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.style.display = 'block';
+                
+                camera = new Camera(video, {
+                    onFrame: async () => {
+                        await pose.send({ image: video });
+                    },
+                    width: video.videoWidth,
+                    height: video.videoHeight
+                });
+                camera.start();
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                alert('Unable to access camera. Please check permissions.');
+                stopCamera();
+            }
+        }
+
+        function stopCamera() {
+            isRunning = false;
+            document.getElementById('toggleBtn').textContent = 'Start';
+            document.getElementById('toggleBtn').className = 'px-6 py-2 rounded-xl bg-gradient-to-r from-[#00B2FF] to-[#7C3AED] text-white font-semibold hover:shadow-lg transition-all';
+            
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            
+            const video = document.getElementById('video');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('toggleBtn').addEventListener('click', startCamera);
+        
+        // Modal controls
+        const drillsModal = document.getElementById('drillsModal');
+        const openDrillsBtn = document.getElementById('openDrillsBtn');
+        const closeDrillsBtn = document.getElementById('closeDrillsBtn');
+        if(openDrillsBtn){ openDrillsBtn.addEventListener('click',()=> drillsModal.classList.remove('hidden')); }
+        if(closeDrillsBtn){ closeDrillsBtn.addEventListener('click',()=> drillsModal.classList.add('hidden')); }
+        if(drillsModal){ drillsModal.addEventListener('click', (e)=>{ if(e.target === drillsModal) drillsModal.classList.add('hidden'); }); }
+
+        // Wire drill buttons
+        function wireDrillButtons(){
+            document.querySelectorAll('#drillsModal .drill-btn').forEach(btn=>{
+                btn.addEventListener('click', ()=>{
+                    currentDrill = btn.dataset.drill;
+                    document.querySelectorAll('#drillsModal .drill-btn').forEach(b=> b.classList.remove('active'));
+                    btn.classList.add('active');
+                    lastFeedback = '';
+                    if(drillsModal){ drillsModal.classList.add('hidden'); }
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', wireDrillButtons);
+
+        document.querySelectorAll('[data-struggle]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const struggle = btn.dataset.struggle;
+                const recommendations = getRecommendedDrills(struggle);
+                
+                const container = document.getElementById('drillRecommendations');
+                container.innerHTML = recommendations.map(rec => `
+                    <div class="p-4 bg-[#1A1B20] border border-[rgba(0,178,255,0.15)] rounded-xl">
+                        <h4 class="font-bold text-white mb-1">${rec.name}</h4>
+                        <p class="text-sm text-gray-400">${rec.desc}</p>
+                    </div>
+                `).join('');
+                
+                document.getElementById('recommendedDrills').classList.remove('hidden');
+            });
+        });
+
+        function getRecommendedDrills(struggle) {
+            const drills = {
+                balance: [
+                    { name: 'One-Leg Hold', desc: 'Improve core stability and balance' },
+                    { name: 'Weight Shift', desc: 'Transfer control for better balance' },
+                    { name: 'Shoulder Tilt Control', desc: 'Maintain alignment during movement' }
+                ],
+                rotation: [
+                    { name: 'Hip Twist Drill', desc: 'Increase rotation range and flexibility' },
+                    { name: 'Torso Rotation', desc: 'Improve body turn for power' },
+                    { name: 'Air Swing Simulation', desc: 'Coordination between shoulders and hips' }
+                ],
+                alignment: [
+                    { name: 'Wall-Back Alignment', desc: 'Perfect spine straightness' },
+                    { name: 'Posture Check', desc: 'Maintain athletic stance throughout' },
+                    { name: 'Follow Through', desc: 'Finish position and extension control' }
+                ]
+            };
+            return drills[struggle] || [];
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePose();
+        });
+    </script>
+    <script>
+        // Tips map
+        const drillTips = {
+            'wall-back': ['Keep head, shoulders, hips touching the wall.', 'Draw the belly button gently toward the spine.'],
+            'hip-twist': ['Turn from thoracic spine, keep hips quiet.', 'Exhale during rotation for control.'],
+            'air-swing': ['Balanced finish; hold for one count.', 'Maintain width; avoid collapsing arms.'],
+            'shoulder-tilt': ['Imagine a level laser across shoulders.', 'Lengthen neck; avoid shrugging.'],
+            'one-leg': ['Grip the ground with toes for balance.', 'Stack knee over mid-foot.'],
+            'weight-shift': ['Feel pressure move from inside trail foot to lead heel.', 'Keep spine angle steady while shifting.'],
+            'rhythm': ['Count 1-2 back, 1 through for tempo.', 'Stay smooth; avoid rushing transition.'],
+            'posture-check': ['Soft knees, neutral pelvis, long spine.', 'Weight distributed mid-foot.'],
+            'follow-through': ['Chest to target; belt buckle to target.', 'Finish tall, hold your pose.'],
+            'torso-rotation': ['Rotate around a stable spine.', 'Keep lower ribs drawn down lightly.']
+        };
+        let lastTipAt = 0;
+        function maybeSuggestTip(drillId){
+            const now = Date.now();
+            if(now - lastTipAt < 5000) return;
+            const tips = drillTips[drillId];
+            if(!tips) return;
+            const tip = tips[Math.floor(Math.random()*tips.length)];
+            displayFeedback('Tip: ' + tip);
+            if(Math.random()>0.5) speakFeedback(tip);
+            lastTipAt = now;
+        }
+    </script>
+</body>
+</html>

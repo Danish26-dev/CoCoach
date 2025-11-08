@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warmup Drills - CoCoach</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <!-- model-viewer for GLB -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0B0B10 0%, #1A1B20 100%);  }
+        .card { background: #1A1B20; border: 1px solid rgba(0,178,255,0.15); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,178,255,.08); }
+        .gradient-text { background: linear-gradient(135deg, #00B2FF, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .chip { background: rgba(0,178,255,.12); border: 1px solid rgba(0,178,255,.35); color: #00B2FF; padding: 4px 8px; border-radius: 8px; font-size: 12px; }
+        .drill-btn { background:#1A1B20; border: 1px solid rgba(0,178,255,0.15); border-radius: 12px; padding: 10px 12px; color:#F5F5F5; transition: all .2s; }
+        .drill-btn.active, .drill-btn:hover { border-color:#00B2FF; box-shadow: 0 8px 28px rgba(0,178,255,.22); }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold gradient-text">Warmup Drills</h1>
+                <p class="text-gray-400">Real-time analysis powered by MediaPipe Pose</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="openDrillsBtn" class="px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-white hover:border-[#00B2FF]">Choose Drill</button>
+                <a href="como.html" class="px-4 py-2 rounded-xl bg-[#1A1B20] border border-[rgba(0,178,255,0.25)] text-[#00B2FF] hover:bg-[rgba(0,178,255,0.10)]">Back to CoMo</a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 card">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="chip">Camera</span>
+                        <span id="poseDetected" class="hidden chip" style="color:#1EF9A1;border-color:rgba(30,249,161,0.35);background:rgba(30,249,161,0.12)">Pose Detected</span>
+                    </div>
+                    <button id="toggleBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#00B2FF] to-[#7C3AED] text-white font-semibold">Start</button>
+                </div>
+                <div class="relative rounded-2xl overflow-hidden bg-black" style="aspect-ratio:16/9;">
+                    <video id="video" class="w-full h-full" autoplay playsinline></video>
+                    <canvas id="canvas" class="absolute inset-0 w-full h-full" style="display:none;"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="text-xl font-bold text-white mb-3">Live Feedback</h2>
+                <div id="feedbackContainer" class="space-y-2 max-h-[50vh] overflow-auto">
+                    <div class="text-gray-400">Start a drill to receive feedback...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Coach FAB (no redirect) -->
+        <div class="fixed bottom-4 right-4 z-50 group cursor-pointer" aria-label="Coach">
+            <div class="relative rounded-full p-[2px] bg-gradient-to-br from-[#00B2FF] via-[#7C3AED] to-[#1EF9A1] shadow-[0_10px_30px_rgba(0,178,255,0.35)] transition-transform group-hover:scale-105">
+                <div class="rounded-full bg-[#0B0B10] p-1">
+                    <model-viewer id="coachAvatarWarmup"
+                        src="assets/coach.glb"
+                        camera-controls
+                        disable-zoom
+                        style="width:68px; height:68px; border-radius:50%; overflow:hidden;"
+                        camera-orbit="0deg 80deg 3.6m"
+                        ar
+                        ar-modes="webxr scene-viewer quick-look">
+                    </model-viewer>
+                </div>
+            </div>
+            <span class="absolute -top-8 right-0 text-xs px-2 py-1 rounded-md bg-[#0B0B10]/90 border border-[rgba(0,178,255,0.25)] text-white opacity-0 group-hover:opacity-100 transition-opacity">Coach</span>
+        </div>
+
+        <!-- Modal for drills -->
+        <div id="drillsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="w-full max-w-4xl card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white">Select a Drill</h3>
+                    <button id="closeDrillsBtn" class="text-gray-400 hover:text-white">Close</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <button class="drill-btn" data-drill="arm-circles">Arm Circles</button>
+                    <button class="drill-btn" data-drill="leg-swings">Leg Swings</button>
+                    <button class="drill-btn" data-drill="squats">Squats</button>
+                    <button class="drill-btn" data-drill="torso-rotations">Torso Rotations</button>
+                    <button class="drill-btn" data-drill="side-bends">Side Bends</button>
+                    <button class="drill-btn" data-drill="shoulder-turn">Shoulder Turn (Club)</button>
+                    <button class="drill-btn" data-drill="lunge-twist">Lunge with Twist</button>
+                    <button class="drill-btn" data-drill="hip-circles">Hip Circles</button>
+                    <button class="drill-btn" data-drill="half-swings">Half Swings</button>
+                    <button class="drill-btn" data-drill="wrist-rolls">Wrist Rolls</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let camera = null; let pose = null; let isRunning = false; let currentDrill = null; let speechSynthesis = window.speechSynthesis; let lastVoiceTime = 0; const VOICE_DELAY = 1200;
+        function speak(text){ const now=Date.now(); if(now-lastVoiceTime<VOICE_DELAY) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.rate=0.9; u.pitch=0.95; u.volume=0.85; speechSynthesis.speak(u); lastVoiceTime=now; }
+        function initializePose(){ pose=new Pose({ locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` }); pose.setOptions({ modelComplexity:1,smoothLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5 }); pose.onResults(onResults); }
+        function onResults(results){ const canvas=document.getElementById('canvas'); const video=document.getElementById('video'); const ctx=canvas.getContext('2d'); if(!results.poseLandmarks){ document.getElementById('poseDetected').classList.add('hidden'); return;} document.getElementById('poseDetected').classList.remove('hidden'); canvas.width=video.videoWidth; canvas.height=video.videoHeight; canvas.style.display='block'; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#00B2FF'; results.poseLandmarks.forEach(l=>{ ctx.beginPath(); ctx.arc(l.x*canvas.width,l.y*canvas.height,3,0,2*Math.PI); ctx.fill(); }); analyze(results.poseLandmarks); }
+        function vAngle(a,b,c){ const v1={x:a.x-b.x,y:a.y-b.y}, v2={x:c.x-b.x,y:c.y-b.y}; const dot=v1.x*v2.x+v1.y*v2.y, m1=Math.hypot(v1.x,v1.y), m2=Math.hypot(v2.x,v2.y); const cos=Math.max(-1,Math.min(1,dot/(m1*m2||1))); return Math.abs(Math.acos(cos)*180/Math.PI); }
+        function addFeedback(t){ const c=document.getElementById('feedbackContainer'); const el=document.createElement('div'); el.className='p-3 rounded-xl border border-[rgba(0,178,255,0.25)] bg-[#0B0B10] text-white'; el.textContent=t; c.prepend(el); while(c.children.length>6) c.removeChild(c.lastChild); }
+
+        // Advice tips per drill
+        const drillTips = {
+            'arm-circles': ['Keep shoulders down, reach long through fingertips.', 'Move slow and smooth; avoid shrugging.'],
+            'leg-swings': ['Brace your core to prevent wobble.', 'Swing from the hip; keep torso tall.'],
+            'squats': ['Push hips back then down; keep chest lifted.', 'Knees track over toes; press through heels.'],
+            'torso-rotations': ['Rotate from mid-back, not just arms.', 'Keep chin level; eyes forward.'],
+            'side-bends': ['Reach up first, then bend sideways.', 'Keep pelvis neutral; avoid twisting forward.'],
+            'shoulder-turn': ['Pin hips stable; rotate shoulders over a stable base.', 'Long spine, avoid collapsing chest.'],
+            'lunge-twist': ['Front knee stacked over ankle.', 'Twist from ribcage; keep hips square.'],
+            'hip-circles': ['Draw smooth circles; keep shoulders quiet.', 'Even tempo; avoid jerky motions.'],
+            'half-swings': ['Sync shoulders and hips; same tempo both ways.', 'Finish tall with balanced weight.'],
+            'wrist-rolls': ['Small controlled circles; elbows close.', 'Keep forearms quiet; avoid flaring.']
+        };
+        let lastTipAt = 0;
+        function maybeSuggestTip(drillId){
+            const now = Date.now();
+            if(now - lastTipAt < 5000) return; // 5s between tips
+            const tips = drillTips[drillId];
+            if(!tips) return;
+            const tip = tips[Math.floor(Math.random()*tips.length)];
+            addFeedback('Tip: ' + tip);
+            if(Math.random()>0.5) speak(tip);
+            lastTipAt = now;
+        }
+
+        function analyze(lm){ if(!currentDrill) return; const L=(i)=>lm[i]; const nose=L(0), ls=L(11), rs=L(12), le=L(13), re=L(14), lw=L(15), rw=L(16), lh=L(23), rh=L(24), lk=L(25), rk=L(26), la=L(27), ra=L(28);
+            switch(currentDrill){
+                case 'arm-circles':{ const leftLevel=Math.abs(le.y-ls.y)<0.05&&Math.abs(lw.y-ls.y)<0.07; const rightLevel=Math.abs(re.y-rs.y)<0.05&&Math.abs(rw.y-rs.y)<0.07; const ok=leftLevel&&rightLevel; addFeedback(ok?'Arms extended at shoulder level — good.':'Extend arms to shoulder height and keep straight.'); if(!ok) speak('Extend arms to shoulder height'); maybeSuggestTip('arm-circles'); break; }
+                case 'leg-swings':{ const shMid={x:(ls.x+rs.x)/2,y:(ls.y+rs.y)/2}, hipMid={x:(lh.x+rh.x)/2,y:(lh.y+rh.y)/2}; const dx=hipMid.x-shMid.x, dy=hipMid.y-shMid.y; const angle=Math.abs(Math.atan2(dy,dx)*180/Math.PI); const tilt=90-angle; const ok=Math.abs(tilt)<10; addFeedback(ok?'Torso upright.':'Reduce torso tilt during swing.'); if(!ok) speak('Keep torso upright'); maybeSuggestTip('leg-swings'); break; }
+                case 'squats':{ const lK=vAngle(lh,lk,la), rK=vAngle(rh,rk,ra), knee=(lK+rK)/2; const hipsBelow=((lh.y+rh.y)/2) > ((ls.y+rs.y)/2); const ok=knee>=80&&knee<=110&&hipsBelow; addFeedback(ok?'Good squat depth and knee angle.':'Aim for knee 80°–110° and hips below shoulders.'); if(!ok) speak('Adjust squat depth and knee angle'); maybeSuggestTip('squats'); break; }
+                case 'torso-rotations':{ const sA=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI; const hA=Math.atan2(rh.y-lh.y, rh.x-lh.x)*180/Math.PI; const level=Math.abs(ls.y-rs.y)<0.03; const rot=Math.abs(sA-hA); const ok=rot>30&&level; addFeedback(ok?'Good rotation with level shoulders.':'Rotate shoulders >30° and keep them level.'); if(!ok) speak('Increase rotation and level shoulders'); maybeSuggestTip('torso-rotations'); break; }
+                case 'side-bends':{ const shMid={x:(ls.x+rs.x)/2,y:(ls.y+rs.y)/2}, hipMid={x:(lh.x+rh.x)/2,y:(lh.y+rh.y)/2}; const lateral=Math.abs(shMid.x-hipMid.x)>0.03; const forward=Math.abs(((ls.y+rs.y)/2)-((lh.y+rh.y)/2))<0.02; const ok=lateral&&forward; addFeedback(ok?'Nice lateral bend without forward lean.':'Bend sideways; avoid leaning forward.'); if(!ok) speak('Side bend without leaning forward'); maybeSuggestTip('side-bends'); break; }
+                case 'shoulder-turn':{ const sA=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI; const hA=Math.atan2(rh.y-lh.y, rh.x-lh.x)*180/Math.PI; const rot=Math.abs(sA-hA); const hipsStable=Math.abs(hA)<10; const ok=rot>45&&hipsStable; addFeedback(ok?'Strong shoulder turn, hips stable.':'Turn shoulders >45° and keep hips stable.'); if(!ok) speak('Turn shoulders more and stabilize hips'); maybeSuggestTip('shoulder-turn'); break; }
+                case 'lunge-twist':{ const knee=(vAngle(lh,lk,la)+vAngle(rh,rk,ra))/2; const twist=Math.abs(Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI); const ok=knee>=90&&knee<=100&&twist>25; addFeedback(ok?'Great lunge angle and torso twist.':'Aim for knee ~95° and twist >25°.'); if(!ok) speak('Adjust knee angle and twist more'); maybeSuggestTip('lunge-twist'); break; }
+                case 'hip-circles':{ const hipPath=Math.hypot(lh.x-rh.x, lh.y-rh.y); const smooth=hipPath>0.2&&hipPath<0.6; addFeedback(smooth?'Smooth hip circles.':'Keep hip circles smooth and consistent.'); if(!smooth) speak('Make smoother hip circles'); maybeSuggestTip('hip-circles'); break; }
+                case 'half-swings':{ const sA=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI; const hA=Math.atan2(rh.y-lh.y, rh.x-lh.x)*180/Math.PI; const sync=Math.abs(Math.abs(sA)-Math.abs(hA))<15; const rotationOK=Math.abs(sA-hA)>20; const ok=sync&&rotationOK; addFeedback(ok?'Good shoulder/hip sync.':'Sync shoulders and hips with consistent rotation.'); if(!ok) speak('Sync shoulders and hips'); maybeSuggestTip('half-swings'); break; }
+                case 'wrist-rolls':{ const lwVar=Math.hypot((lw.x-ls.x),(lw.y-ls.y)); const rwVar=Math.hypot((rw.x-rs.x),(rw.y-rs.y)); const lowVar=lwVar<0.35&&rwVar<0.35; addFeedback(lowVar?'Controlled wrist rolls.':'Make smaller, controlled wrist circles.'); if(!lowVar) speak('Control wrist rolls'); maybeSuggestTip('wrist-rolls'); break; }
+            }
+        }
+        async function startCamera(){ if(isRunning){ stopCamera(); return;} isRunning=true; document.getElementById('toggleBtn').textContent='Stop'; try{ const stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:1280,height:720 } }); const video=document.getElementById('video'); video.srcObject=stream; await new Promise(r=> video.onloadedmetadata=r); const canvas=document.getElementById('canvas'); canvas.width=video.videoWidth; canvas.height=video.videoHeight; canvas.style.display='block'; camera=new Camera(video,{ onFrame:async()=>{ await pose.send({ image: video }); }, width:video.videoWidth,height:video.videoHeight }); camera.start(); }catch(e){ console.error(e); alert('Unable to access camera.'); stopCamera(); } }
+        function stopCamera(){ isRunning=false; document.getElementById('toggleBtn').textContent='Start'; if(camera){ camera.stop(); camera=null; } const v=document.getElementById('video'); if(v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; } }
+        document.getElementById('toggleBtn').addEventListener('click', startCamera);
+        const drillsModal=document.getElementById('drillsModal'); const openDrillsBtn=document.getElementById('openDrillsBtn'); const closeDrillsBtn=document.getElementById('closeDrillsBtn');
+        if(openDrillsBtn){ openDrillsBtn.addEventListener('click',()=> drillsModal.classList.remove('hidden')); }
+        if(closeDrillsBtn){ closeDrillsBtn.addEventListener('click',()=> drillsModal.classList.add('hidden')); }
+        if(drillsModal){ drillsModal.addEventListener('click',(e)=>{ if(e.target===drillsModal) drillsModal.classList.add('hidden'); }); }
+        document.querySelectorAll('#drillsModal .drill-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ currentDrill=btn.dataset.drill; document.querySelectorAll('#drillsModal .drill-btn').forEach(b=> b.classList.remove('active')); btn.classList.add('active'); drillsModal.classList.add('hidden'); }); });
+        document.addEventListener('DOMContentLoaded', initializePose);
+    </script>
+</body>
+</html>

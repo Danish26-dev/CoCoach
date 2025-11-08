@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MediaPipe Pose</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0A0B0F;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
+        #status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            background: rgba(0,178,255,0.1);
+            border: 1px solid rgba(0,178,255,0.3);
+        }
+        
+        .success {
+            background: rgba(30,249,161,0.1) !important;
+            border-color: rgba(30,249,161,0.3) !important;
+        }
+        
+        .error {
+            background: rgba(255,59,59,0.1) !important;
+            border-color: rgba(255,59,59,0.3) !important;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            border: none;
+            border-radius: 8px;
+            color: #0A0B0F;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏌️ MediaPipe Pose Test</h1>
+    <div id="status">Loading tests...</div>
+    
+    <button onclick="testCamera()">Test Camera</button>
+    <button onclick="testSpeech()">Test Speech</button>
+    <button onclick="testMediaPipe()">Test MediaPipe</button>
+    
+    <div id="results"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        
+        function updateStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+        }
+        
+        function addResult(test, result, success) {
+            const color = success ? '#1EF9A1' : '#FF3B3B';
+            const icon = success ? '✓' : '✗';
+            resultsDiv.innerHTML += `<div style="color: ${color}; margin: 10px;">${icon} ${test}: ${result}</div>`;
+        }
+        
+        async function testCamera() {
+            updateStatus('Testing camera access...');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+                addResult('Camera', 'Access granted', true);
+                updateStatus('Camera test passed!', 'success');
+            } catch (error) {
+                addResult('Camera', error.message, false);
+                updateStatus('Camera test failed', 'error');
+            }
+        }
+        
+        function testSpeech() {
+            updateStatus('Testing speech synthesis...');
+            try {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance('Testing voice feedback');
+                    utterance.rate = 1.0;
+                    window.speechSynthesis.speak(utterance);
+                    addResult('Speech Synthesis', 'Available and working', true);
+                    updateStatus('Speech test passed!', 'success');
+                } else {
+                    throw new Error('Speech Synthesis not supported');
+                }
+            } catch (error) {
+                addResult('Speech Synthesis', error.message, false);
+                updateStatus('Speech test failed', 'error');
+            }
+        }
+        
+        async function testMediaPipe() {
+            updateStatus('Testing MediaPipe Pose...');
+            try {
+                if (typeof Pose === 'undefined') {
+                    throw new Error('MediaPipe Pose not loaded');
+                }
+                
+                const pose = new Pose({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                    }
+                });
+                
+                pose.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                addResult('MediaPipe Pose', 'Initialized successfully', true);
+                
+                if (typeof Camera !== 'undefined') {
+                    addResult('MediaPipe Camera Utils', 'Available', true);
+                }
+                
+                if (typeof drawConnectors !== 'undefined') {
+                    addResult('MediaPipe Drawing Utils', 'Available', true);
+                }
+                
+                updateStatus('All MediaPipe components loaded!', 'success');
+            } catch (error) {
+                addResult('MediaPipe Pose', error.message, false);
+                updateStatus('MediaPipe test failed', 'error');
+            }
+        }
+        
+        // Auto-run basic checks
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testMediaPipe();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

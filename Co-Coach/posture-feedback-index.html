@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Golf Posture Feedback - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0A0B0F;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #1EF9A1, #00B2FF);
+            bottom: 10%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: #9CA3AF;
+            margin-bottom: 48px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 36px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            color: #0A0B0F;
+            box-shadow: 0 8px 32px rgba(0,178,255,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,178,255,0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(0,178,255,0.1);
+            border: 2px solid rgba(0,178,255,0.3);
+            color: #00B2FF;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0,178,255,0.2);
+            border-color: #00B2FF;
+            transform: translateY(-4px);
+        }
+
+        .features-section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #F5F5F5;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.2);
+            border-radius: 20px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #00B2FF;
+            transform: translateY(-8px);
+            box-shadow: 0 16px 64px rgba(0,178,255,0.3);
+        }
+
+        .feature-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #F5F5F5;
+            margin-bottom: 16px;
+        }
+
+        .feature-desc {
+            color: #9CA3AF;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 16px;
+        }
+
+        .feature-list li {
+            color: #9CA3AF;
+            font-size: 14px;
+            padding: 8px 0;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #1EF9A1;
+            font-weight: bold;
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, rgba(0,178,255,0.1), rgba(30,249,161,0.1));
+            border: 1px solid rgba(0,178,255,0.2);
+            border-radius: 24px;
+            padding: 60px 40px;
+            margin: 80px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00B2FF, #1EF9A1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            color: #9CA3AF;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .resources-section {
+            padding: 80px 0;
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .resource-card {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,0.15);
+            border-radius: 16px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            border-color: #00B2FF;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,178,255,0.3);
+        }
+
+        .resource-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .resource-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #F5F5F5;
+            margin-bottom: 12px;
+        }
+
+        .resource-desc {
+            color: #9CA3AF;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .testimonial {
+            background: rgba(0,178,255,0.05);
+            border-left: 4px solid #00B2FF;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 40px 0;
+        }
+
+        .testimonial-text {
+            color: #F5F5F5;
+            font-size: 20px;
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            color: #1EF9A1;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 20px;
+            border-top: 1px solid rgba(0,178,255,0.1);
+            margin-top: 80px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: #9CA3AF;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #00B2FF;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .hero p {
+                font-size: 18px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .features-grid,
+            .resources-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🏌️ Live Golf Posture Feedback</h1>
+            <p>Transform your golf game with AI-powered real-time coaching. Perfect your stance, master your swing, and unlock your full potential.</p>
+            
+            <div class="cta-buttons">
+                <a href="live-posture-feedback.html" class="btn btn-primary">
+                    <span>🚀</span> Start Training Now
+                </a>
+                <a href="demo-guide.html" class="btn btn-secondary">
+                    <span>📖</span> View Demo Guide
+                </a>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Posture Metrics</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Interactive Drills</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Real-Time</span>
+                    <span class="stat-label">AI Feedback</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Setup Required</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2 class="section-title">Powerful Features</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🎥</span>
+                    <h3 class="feature-title">Real-Time Pose Detection</h3>
+                    <p class="feature-desc">
+                        Advanced MediaPipe technology tracks 33 body landmarks at 15-30 FPS, 
+                        providing instant analysis of your golf posture and swing mechanics.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Full-body landmark tracking</li>
+                        <li>Smooth, jitter-free detection</li>
+                        <li>Works in any lighting</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3 class="feature-title">5 Key Metrics</h3>
+                    <p class="feature-desc">
+                        Comprehensive analysis of the most important golf posture elements, 
+                        comparing your form against professional standards in real-time.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Spine Tilt (35-45°)</li>
+                        <li>Knee Bend (15-25°)</li>
+                        <li>Shoulder Level (±5°)</li>
+                        <li>Hip Rotation (20-45°)</li>
+                        <li>Head Position (<10°)</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">🗣️</span>
+                    <h3 class="feature-title">Voice Coaching</h3>
+                    <p class="feature-desc">
+                        Natural speech synthesis delivers encouraging, specific feedback 
+                        just like a real coach standing beside you.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Positive reinforcement</li>
+                        <li>Specific corrections</li>
+                        <li>Natural coaching tone</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3 class="feature-title">5 Interactive Drills</h3>
+                    <p class="feature-desc">
+                        Targeted exercises focusing on specific aspects of your posture, 
+                        from foundation alignment to dynamic swing coordination.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Wall-Back Alignment</li>
+                        <li>Hip Twist Drill</li>
+                        <li>Air Swing Simulation</li>
+                        <li>Shoulder Tilt Control</li>
+                        <li>One-Leg Balance</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">✨</span>
+                    <h3 class="feature-title">Beautiful Interface</h3>
+                    <p class="feature-desc">
+                        Stunning dark theme with glowing gradients, smooth animations, 
+                        and intuitive controls that make training a pleasure.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Dark mode optimized</li>
+                        <li>Responsive design</li>
+                        <li>Real-time visual feedback</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">🚀</span>
+                    <h3 class="feature-title">Zero Setup</h3>
+                    <p class="feature-desc">
+                        No installation, no configuration, no complexity. 
+                        Open in your browser and start training immediately.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Works in any browser</li>
+                        <li>No downloads needed</li>
+                        <li>Instant startup</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="testimonial">
+            <p class="testimonial-text">
+                "The real-time feedback is incredible. It's like having a professional coach 
+                watching every movement, but available 24/7. My golf stance has improved 
+                dramatically in just a few weeks."
+            </p>
+            <p class="testimonial-author">— Beta Tester, Golf Enthusiast</p>
+        </div>
+
+        <div class="resources-section">
+            <h2 class="section-title">Resources & Documentation</h2>
+            
+            <div class="resources-grid">
+                <a href="test-posture.html" class="resource-card">
+                    <div class="resource-icon">🧪</div>
+                    <div class="resource-title">System Test</div>
+                    <div class="resource-desc">
+                        Verify that your camera, speech synthesis, and MediaPipe 
+                        are all working correctly before starting.
+                    </div>
+                </a>
+
+                <a href="demo-guide.html" class="resource-card">
+                    <div class="resource-icon">📖</div>
+                    <div class="resource-title">Demo Guide</div>
+                    <div class="resource-desc">
+                        Interactive visual guide walking you through all features, 
+                        drills, and UI elements step by step.
+                    </div>
+                </a>
+
+                <a href="QUICK_START.md" class="resource-card" target="_blank">
+                    <div class="resource-icon">⚡</div>
+                    <div class="resource-title">Quick Start Guide</div>
+                    <div class="resource-desc">
+                        Get started in minutes with step-by-step instructions, 
+                        tips, and troubleshooting help.
+                    </div>
+                </a>
+
+                <a href="LIVE_POSTURE_FEEDBACK_README.md" class="resource-card" target="_blank">
+                    <div class="resource-icon">📚</div>
+                    <div class="resource-title">Technical Docs</div>
+                    <div class="resource-desc">
+                        Complete technical documentation covering architecture, 
+                        algorithms, and implementation details.
+                    </div>
+                </a>
+
+                <a href="IMPLEMENTATION_SUMMARY.md" class="resource-card" target="_blank">
+                    <div class="resource-icon">📋</div>
+                    <div class="resource-title">Implementation Summary</div>
+                    <div class="resource-desc">
+                        Project overview, technical decisions, and comprehensive 
+                        feature breakdown.
+                    </div>
+                </a>
+
+                <a href="como.html" class="resource-card">
+                    <div class="resource-icon">🏠</div>
+                    <div class="resource-title">Back to CoCoach</div>
+                    <div class="resource-desc">
+                        Return to the main CoCoach CoMo page to explore other 
+                        coaching features.
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 80px 0;">
+            <h2 class="section-title">Ready to Transform Your Golf Game?</h2>
+            <p style="color: #9CA3AF; font-size: 18px; margin-bottom: 40px;">
+                Start your first session now and experience the power of AI coaching
+            </p>
+            <a href="live-posture-feedback.html" class="btn btn-primary" style="font-size: 20px; padding: 20px 48px;">
+                <span>🏌️</span> Launch Live Posture Feedback
+            </a>
+        </div>
+
+        <div class="footer">
+            <div class="footer-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="profile.html">My Profile</a>
+                <a href="coach-avatar.html">AI Coach</a>
+                <a href="como.html">CoMo</a>
+                <a href="live-posture-feedback.html">Live Feedback</a>
+            </div>
+            <p style="color: #9CA3AF; font-size: 14px;">
+                Built with MediaPipe Pose • Web Speech API • HTML5 Canvas
+            </p>
+            <p style="color: #9CA3AF; font-size: 14px; margin-top: 8px;">
+                Part of the CoCoach AI Coaching Platform
+            </p>
+            <p style="color: #6B7280; font-size: 12px; margin-top: 16px;">
+                © 2025 CoCoach - All Rights Reserved
+            </p>
+        </div>
+    </div>
+</body>
+</html>

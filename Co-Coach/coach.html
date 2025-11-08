@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCoach - Coach Setup</title>
+    <link rel="stylesheet" href="profile.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(156,163,175,0.3);
+            transition: .3s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background: linear-gradient(135deg, #00B2FF, #7C3AED);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        #colorPicker {
+            width: 100%;
+            height: 50px;
+            border-radius: 12px;
+            border: 1px solid rgba(156,163,175,0.25);
+            cursor: pointer;
+        }
+        .result-box {
+            background: #1A1B20;
+            border: 1px solid rgba(0,178,255,.15);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+            display: none;
+        }
+        .result-box.show {
+            display: block;
+        }
+        .json-output {
+            background: #0B0B10;
+            padding: 16px;
+            border-radius: 12px;
+            color: #9CA3AF;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="page">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="back-btn" onclick="window.location.href='avatar.html'" aria-label="Back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="brand">CoCoach</div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="hero">
+                <h1 class="title">Create Your Coach</h1>
+                <p class="subtitle">Build your <span class="chip">Future You</span> coaching companion</p>
+            </div>
+
+            <div class="form-container">
+                <div class="section">
+                    <form id="coachForm">
+                        <div class="field">
+                            <label for="name">Coach Name</label>
+                            <div class="input-wrap">
+                                <input type="text" id="name" placeholder="e.g., Coach Alex" required>
+                            </div>
+                        </div>
+
+                        <div class="grid">
+                            <div class="field">
+                                <label for="gender">Gender</label>
+                                <div class="input-wrap">
+                                    <select id="gender" required>
+                                        <option value="" selected disabled>Select</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="neutral">Neutral</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="sport">Sport</label>
+                                <div class="input-wrap">
+                                    <select id="sport" required>
+                                        <option value="" selected disabled>Select</option>
+                                        <option value="golf">Golf</option>
+                                        <option value="football">Football</option>
+                                        <option value="basketball">Basketball</option>
+                                        <option value="yoga">Yoga</option>
+                                        <option value="running">Running</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field full" id="golfCoachWrap" style="display: none;">
+                            <label for="golfCoach">Golf Coach Persona</label>
+                            <div class="input-wrap">
+                                <select id="golfCoach">
+                                    <option value="" selected disabled>Select coach persona</option>
+                                    <option value="butch_harmon">Butch Harmon (Calm, Precision-Focused)</option>
+                                    <option value="david_leadbetter">David Leadbetter (Technical Strategist)</option>
+                                    <option value="hank_haney">Hank Haney (Motivational & Friendly)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid">
+                            <div class="field">
+                                <label for="coachType">Coach Type</label>
+                                <div class="input-wrap">
+                                    <select id="coachType" required>
+                                        <option value="" selected disabled>Select</option>
+                                        <option value="motivator">Motivator</option>
+                                        <option value="calm">Calm</option>
+                                        <option value="strict">Strict</option>
+                                        <option value="analytical">Analytical</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="goal">Training Goal</label>
+                                <div class="input-wrap">
+                                    <select id="goal" required>
+                                        <option value="" selected disabled>Select</option>
+                                        <option value="posture">Posture</option>
+                                        <option value="stamina">Stamina</option>
+                                        <option value="strength">Strength</option>
+                                        <option value="flexibility">Flexibility</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="voice">Voice Style</label>
+                            <div class="input-wrap">
+                                <select id="voice" required>
+                                    <option value="" selected disabled>Select</option>
+                                    <option value="cheerful">Cheerful</option>
+                                    <option value="calm">Calm</option>
+                                    <option value="serious">Serious</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field full" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                            <label for="voiceFeedback" style="margin: 0;">Voice Feedback</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="voiceFeedback">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="actions">
+                            <button type="submit" class="btn primary">Create Coach</button>
+                        </div>
+                    </form>
+
+                    <div id="resultBox" class="result-box">
+                        <h3 style="color: #F5F5F5; margin-bottom: 12px; font-size: 16px; font-weight: 600;">Saved Configuration:</h3>
+                        <div id="jsonOutput" class="json-output"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('coachForm');
+        const resultBox = document.getElementById('resultBox');
+        const jsonOutput = document.getElementById('jsonOutput');
+
+        const sportSelect = document.getElementById('sport');
+        const golfCoachWrap = document.getElementById('golfCoachWrap');
+        const golfCoachSelect = document.getElementById('golfCoach');
+
+        // Show/hide golf coach dropdown based on sport selection
+        sportSelect.addEventListener('change', () => {
+            if (sportSelect.value === 'golf') {
+                golfCoachWrap.style.display = 'block';
+            } else {
+                golfCoachWrap.style.display = 'none';
+                golfCoachSelect.value = '';
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const config = {
+                name: document.getElementById('name').value.trim(),
+                gender: document.getElementById('gender').value,
+                sport: document.getElementById('sport').value,
+                coachType: document.getElementById('coachType').value,
+                goal: document.getElementById('goal').value,
+                voice: document.getElementById('voice').value,
+                voiceFeedback: document.getElementById('voiceFeedback').checked
+            };
+
+            // Only include golfCoach if sport is golf
+            if (sportSelect.value === 'golf' && golfCoachSelect.value) {
+                config.golfCoach = golfCoachSelect.value;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('futureYouConfig', JSON.stringify(config, null, 2));
+
+            // Display JSON
+            jsonOutput.textContent = JSON.stringify(config, null, 2);
+            resultBox.classList.add('show');
+
+            // Scroll to result and navigate
+            setTimeout(() => {
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setTimeout(() => {
+                    window.location.href = 'coach-avatar.html';
+                }, 2000);
+            }, 100);
+        });
+
+        // Load saved config if it exists
+        const saved = localStorage.getItem('futureYouConfig');
+        if (saved) {
+            try {
+                const config = JSON.parse(saved);
+                document.getElementById('name').value = config.name || '';
+                document.getElementById('gender').value = config.gender || '';
+                document.getElementById('sport').value = config.sport || '';
+                document.getElementById('coachType').value = config.coachType || '';
+                document.getElementById('goal').value = config.goal || '';
+                document.getElementById('voice').value = config.voice || '';
+                document.getElementById('voiceFeedback').checked = config.voiceFeedback || false;
+                
+                // Handle golf coach dropdown
+                if (config.sport === 'golf') {
+                    golfCoachWrap.style.display = 'block';
+                    if (config.golfCoach) {
+                        golfCoachSelect.value = config.golfCoach;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading saved config:', e);
+            }
+        }
+    </script>
+</body>
+</html>
+
